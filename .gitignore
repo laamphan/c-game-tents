@@ -1,5 +1,6 @@
 /.vscode
+/all-bugs
 /build
-/misc
 /CMakeFiles
+/misc
 /Testing
