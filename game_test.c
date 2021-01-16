@@ -12,6 +12,439 @@ void usage(int argc, char *argv[]) {
   exit(EXIT_FAILURE);
 }
 
+//* Aux Test Functions
+
+uint game_get_current_nb_emptys_row(cgame g, uint i) {
+  uint nb_rows = DEFAULT_SIZE;
+  uint nb_cols = DEFAULT_SIZE;
+  assert(g && i >= 0 && i < nb_rows);
+  uint count = 0;
+
+  for (uint j = 0; j < nb_cols; j++) {
+    if (game_get_square(g, i, j) == EMPTY) {
+      count++;
+    }
+  }
+  return count;
+}
+
+uint game_get_current_nb_emptys_col(cgame g, uint j) {
+  uint nb_rows = DEFAULT_SIZE;
+  uint nb_cols = DEFAULT_SIZE;
+  assert(g && j >= 0 && j < nb_cols);
+  uint count = 0;
+
+  for (uint i = 0; i < nb_rows; i++) {
+    if (game_get_square(g, i, j) == EMPTY) {
+      count++;
+    }
+  }
+  return count;
+}
+
+uint game_get_current_nb_emptys_all(cgame g) {
+  uint nb_rows = DEFAULT_SIZE;
+  uint nb_cols = DEFAULT_SIZE;
+  assert(g);
+  uint count = 0;
+
+  for (uint i = 0; i < nb_rows; i++) {
+    for (uint j = 0; j < nb_cols; j++) {
+      if (game_get_square(g, i, j) == EMPTY) {
+        count++;
+      }
+    }
+  }
+  return count;
+}
+
+uint game_get_current_nb_trees_all(cgame g) {
+  uint nb_rows = DEFAULT_SIZE;
+  uint nb_cols = DEFAULT_SIZE;
+  assert(g);
+  uint count = 0;
+  for (uint i = 0; i < nb_rows; i++) {
+    for (uint j = 0; j < nb_cols; j++) {
+      if (game_get_square(g, i, j) == TREE) {
+        count++;
+      }
+    }
+  }
+  return count;
+}
+
+uint game_get_nb_adjacent_tents(cgame g, uint i, uint j) {
+  uint nb_rows = DEFAULT_SIZE;
+  uint nb_cols = DEFAULT_SIZE;
+  assert(g && i >= 0 && i < nb_rows && j >= 0 && j < nb_cols);
+  uint count = 0;
+
+  // corners
+  if (i == 0 && j == 0) {
+    if (game_get_square(g, i + 1, j) == TENT) {
+      count++;
+    }
+    if (game_get_square(g, i, j + 1) == TENT) {
+      count++;
+    }
+  } else if (i == 0 && j == (nb_cols - 1)) {
+    if (game_get_square(g, i, j - 1) == TENT) {
+      count++;
+    }
+    if (game_get_square(g, i + 1, j) == TENT) {
+      count++;
+    }
+  } else if (i == (nb_rows - 1) && j == 0) {
+    if (game_get_square(g, i - 1, j) == TENT) {
+      count++;
+    }
+    if (game_get_square(g, i, j + 1) == TENT) {
+      count++;
+    }
+  } else if (i == (nb_rows - 1) && j == (nb_cols - 1)) {
+    if (game_get_square(g, i, j - 1) == TENT) {
+      count++;
+    }
+    if (game_get_square(g, i - 1, j) == TENT) {
+      count++;
+    }
+  }
+
+  // edges except corners
+  else if (i == 0 && 0 < j && j < (nb_cols - 1)) {
+    if (game_get_square(g, i, j - 1) == TENT) {
+      count++;
+    }
+    if (game_get_square(g, i + 1, j) == TENT) {
+      count++;
+    }
+    if (game_get_square(g, i, j + 1) == TENT) {
+      count++;
+    }
+  } else if (i == (nb_rows - 1) && 0 < j && j < (nb_cols - 1)) {
+    if (game_get_square(g, i, j - 1) == TENT) {
+      count++;
+    }
+    if (game_get_square(g, i + 1, j) == TENT) {
+      count++;
+    }
+    if (game_get_square(g, i, j + 1) == TENT) {
+      count++;
+    }
+  } else if (0 < i && i < (nb_rows - 1) && j == 0) {
+    if (game_get_square(g, i - 1, j) == TENT) {
+      count++;
+    }
+    if (game_get_square(g, i, j + 1) == TENT) {
+      count++;
+    }
+    if (game_get_square(g, i + 1, j) == TENT) {
+      count++;
+    }
+  } else if (0 < i && i < (nb_rows - 1) && j == (nb_cols - 1)) {
+    if (game_get_square(g, i - 1, j) == TENT) {
+      count++;
+    }
+    if (game_get_square(g, i, j - 1) == TENT) {
+      count++;
+    }
+    if (game_get_square(g, i + 1, j) == TENT) {
+      count++;
+    }
+  }
+
+  // other cases
+  else {
+    if (game_get_square(g, i - 1, j) == TENT) {
+      count++;
+    }
+    if (game_get_square(g, i, j - 1) == TENT) {
+      count++;
+    }
+    if (game_get_square(g, i, j + 1) == TENT) {
+      count++;
+    }
+    if (game_get_square(g, i + 1, j) == TENT) {
+      count++;
+    }
+  }
+
+  return count;
+}
+
+uint game_get_nb_adjacent_trees(cgame g, uint i, uint j) {
+  uint nb_rows = DEFAULT_SIZE;
+  uint nb_cols = DEFAULT_SIZE;
+  assert(g && i >= 0 && i < nb_rows && j >= 0 && j < nb_cols);
+  uint count = 0;
+
+  // corners
+  if (i == 0 && j == 0) {
+    if (game_get_square(g, i + 1, j) == TREE) {
+      count++;
+    }
+    if (game_get_square(g, i, j + 1) == TREE) {
+      count++;
+    }
+  } else if (i == 0 && j == (nb_cols - 1)) {
+    if (game_get_square(g, i, j - 1) == TREE) {
+      count++;
+    }
+    if (game_get_square(g, i + 1, j) == TREE) {
+      count++;
+    }
+  } else if (i == (nb_rows - 1) && j == 0) {
+    if (game_get_square(g, i - 1, j) == TREE) {
+      count++;
+    }
+    if (game_get_square(g, i, j + 1) == TREE) {
+      count++;
+    }
+  } else if (i == (nb_rows - 1) && j == (nb_cols - 1)) {
+    if (game_get_square(g, i, j - 1) == TREE) {
+      count++;
+    }
+    if (game_get_square(g, i - 1, j) == TREE) {
+      count++;
+    }
+  }
+
+  // edges except corners
+  else if (i == 0 && 0 < j && j < (nb_cols - 1)) {
+    if (game_get_square(g, i, j - 1) == TREE) {
+      count++;
+    }
+    if (game_get_square(g, i + 1, j) == TREE) {
+      count++;
+    }
+    if (game_get_square(g, i, j + 1) == TREE) {
+      count++;
+    }
+  } else if (i == (nb_rows - 1) && 0 < j && j < (nb_cols - 1)) {
+    if (game_get_square(g, i, j - 1) == TREE) {
+      count++;
+    }
+    if (game_get_square(g, i + 1, j) == TREE) {
+      count++;
+    }
+    if (game_get_square(g, i, j + 1) == TREE) {
+      count++;
+    }
+  } else if (0 < i && i < (nb_rows - 1) && j == 0) {
+    if (game_get_square(g, i - 1, j) == TREE) {
+      count++;
+    }
+    if (game_get_square(g, i, j + 1) == TREE) {
+      count++;
+    }
+    if (game_get_square(g, i + 1, j) == TREE) {
+      count++;
+    }
+  } else if (0 < i && i < (nb_rows - 1) && j == (nb_cols - 1)) {
+    if (game_get_square(g, i - 1, j) == TREE) {
+      count++;
+    }
+    if (game_get_square(g, i, j - 1) == TREE) {
+      count++;
+    }
+    if (game_get_square(g, i + 1, j) == TREE) {
+      count++;
+    }
+  }
+
+  // other cases
+  else {
+    if (game_get_square(g, i - 1, j) == TREE) {
+      count++;
+    }
+    if (game_get_square(g, i, j - 1) == TREE) {
+      count++;
+    }
+    if (game_get_square(g, i, j + 1) == TREE) {
+      count++;
+    }
+    if (game_get_square(g, i + 1, j) == TREE) {
+      count++;
+    }
+  }
+
+  return count;
+}
+
+uint game_get_nb_adjacent_emptys(cgame g, uint i, uint j) {
+  uint nb_rows = DEFAULT_SIZE;
+  uint nb_cols = DEFAULT_SIZE;
+  assert(g && i >= 0 && i < nb_rows && j >= 0 && j < nb_cols);
+  uint count = 0;
+
+  // corners
+  if (i == 0 && j == 0) {
+    if (game_get_square(g, i + 1, j) == EMPTY) {
+      count++;
+    }
+    if (game_get_square(g, i, j + 1) == EMPTY) {
+      count++;
+    }
+  } else if (i == 0 && j == (nb_cols - 1)) {
+    if (game_get_square(g, i, j - 1) == EMPTY) {
+      count++;
+    }
+    if (game_get_square(g, i + 1, j) == EMPTY) {
+      count++;
+    }
+  } else if (i == (nb_rows - 1) && j == 0) {
+    if (game_get_square(g, i - 1, j) == EMPTY) {
+      count++;
+    }
+    if (game_get_square(g, i, j + 1) == EMPTY) {
+      count++;
+    }
+  } else if (i == (nb_rows - 1) && j == (nb_cols - 1)) {
+    if (game_get_square(g, i, j - 1) == EMPTY) {
+      count++;
+    }
+    if (game_get_square(g, i - 1, j) == EMPTY) {
+      count++;
+    }
+  }
+
+  // edges except corners
+  else if (i == 0 && 0 < j && j < (nb_cols - 1)) {
+    if (game_get_square(g, i, j - 1) == EMPTY) {
+      count++;
+    }
+    if (game_get_square(g, i + 1, j) == EMPTY) {
+      count++;
+    }
+    if (game_get_square(g, i, j + 1) == EMPTY) {
+      count++;
+    }
+  } else if (i == (nb_rows - 1) && 0 < j && j < (nb_cols - 1)) {
+    if (game_get_square(g, i, j - 1) == EMPTY) {
+      count++;
+    }
+    if (game_get_square(g, i + 1, j) == EMPTY) {
+      count++;
+    }
+    if (game_get_square(g, i, j + 1) == EMPTY) {
+      count++;
+    }
+  } else if (0 < i && i < (nb_rows - 1) && j == 0) {
+    if (game_get_square(g, i - 1, j) == EMPTY) {
+      count++;
+    }
+    if (game_get_square(g, i, j + 1) == EMPTY) {
+      count++;
+    }
+    if (game_get_square(g, i + 1, j) == EMPTY) {
+      count++;
+    }
+  } else if (0 < i && i < (nb_rows - 1) && j == (nb_cols - 1)) {
+    if (game_get_square(g, i - 1, j) == EMPTY) {
+      count++;
+    }
+    if (game_get_square(g, i, j - 1) == EMPTY) {
+      count++;
+    }
+    if (game_get_square(g, i + 1, j) == EMPTY) {
+      count++;
+    }
+  }
+
+  // other cases
+  else {
+    if (game_get_square(g, i - 1, j) == EMPTY) {
+      count++;
+    }
+    if (game_get_square(g, i, j - 1) == EMPTY) {
+      count++;
+    }
+    if (game_get_square(g, i, j + 1) == EMPTY) {
+      count++;
+    }
+    if (game_get_square(g, i + 1, j) == EMPTY) {
+      count++;
+    }
+  }
+
+  return count;
+}
+
+uint game_get_nb_diag_adjacent_tents(cgame g, uint i, uint j) {
+  uint nb_rows = DEFAULT_SIZE;
+  uint nb_cols = DEFAULT_SIZE;
+  assert(g && i >= 0 && i < nb_rows && j >= 0 && j < nb_cols);
+  uint count = 0;
+
+  // corners
+  if (i == 0 && j == 0) {
+    if (game_get_square(g, i + 1, j + 1) == TENT) {
+      count++;
+    }
+  } else if (i == 0 && j == (nb_cols - 1)) {
+    if (game_get_square(g, i + 1, j - 1) == TENT) {
+      count++;
+    }
+  } else if (i == (nb_rows - 1) && j == 0) {
+    if (game_get_square(g, i - 1, j + 1) == TENT) {
+      count++;
+    }
+  } else if (i == (nb_rows - 1) && j == (nb_cols - 1)) {
+    if (game_get_square(g, i - 1, j - 1) == TENT) {
+      count++;
+    }
+  }
+
+  // edges except corners
+  else if (i == 0 && 0 < j && j < (nb_cols - 1)) {
+    if (game_get_square(g, i + 1, j - 1) == TENT) {
+      count++;
+    }
+    if (game_get_square(g, i + 1, j + 1) == TENT) {
+      count++;
+    }
+  } else if (i == (nb_rows - 1) && 0 < j && j < (nb_cols - 1)) {
+    if (game_get_square(g, i - 1, j - 1) == TENT) {
+      count++;
+    }
+    if (game_get_square(g, i - 1, j + 1) == TENT) {
+      count++;
+    }
+  } else if (0 < i && i < (nb_rows - 1) && j == 0) {
+    if (game_get_square(g, i - 1, j + 1) == TENT) {
+      count++;
+    }
+    if (game_get_square(g, i + 1, j + 1) == TENT) {
+      count++;
+    }
+  } else if (0 < i && i < (nb_rows - 1) && j == (nb_cols - 1)) {
+    if (game_get_square(g, i - 1, j - 1) == TENT) {
+      count++;
+    }
+    if (game_get_square(g, i + 1, j - 1) == TENT) {
+      count++;
+    }
+  }
+
+  // other cases
+  else {
+    if (game_get_square(g, i - 1, j - 1) == TENT) {
+      count++;
+    }
+    if (game_get_square(g, i - 1, j + 1) == TENT) {
+      count++;
+    }
+    if (game_get_square(g, i + 1, j - 1) == TENT) {
+      count++;
+    }
+    if (game_get_square(g, i + 1, j + 1) == TENT) {
+      count++;
+    }
+  }
+
+  return count;
+}
+
 //* Tests
 
 bool test_game_new() {
