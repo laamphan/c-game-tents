@@ -936,7 +936,148 @@ bool test_game_play_move() {
 }
 
 bool test_game_check_move() { return true; }
-bool test_game_is_over() { return true; }
+
+bool test_game_is_over() {
+  game g = game_default();
+  assert(g);
+  uint nb_tents_row[DEFAULT_SIZE] = {3, 0, 4, 0, 4, 0, 1, 0};
+  uint nb_tents_col[DEFAULT_SIZE] = {4, 0, 1, 2, 1, 1, 2, 1};
+
+  // Only Rule 1 is true
+  square squares_1[DEFAULT_SIZE * DEFAULT_SIZE] = {
+      EMPTY, TENT, EMPTY, EMPTY, TREE, TREE, TENT, EMPTY,
+      TREE, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, TREE,
+      TENT, EMPTY, EMPTY, TENT, TREE, TENT, EMPTY, TENT,
+      TREE, EMPTY, EMPTY, EMPTY, EMPTY, TREE, EMPTY, EMPTY,
+      TENT, TREE, TENT, EMPTY, TENT, EMPTY, TENT, EMPTY,
+      TREE, EMPTY, EMPTY, EMPTY, TREE, EMPTY, TREE, EMPTY,
+      TENT, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+      TREE, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY};
+  g = game_new(squares_1, nb_tents_row, nb_tents_col);
+  assert(g);
+  if (game_is_over(g)) {
+    return false;
+  }
+
+  // Only Rule 2,3 are true
+  square squares_2[DEFAULT_SIZE * DEFAULT_SIZE] = {
+      TENT, EMPTY, EMPTY, TENT, TREE, TREE, TENT, EMPTY,
+      TREE, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, TREE,
+      TENT, EMPTY, TENT, EMPTY, TREE, TENT, EMPTY, TENT,
+      TREE, EMPTY, EMPTY, EMPTY, EMPTY, TREE, EMPTY, EMPTY,
+      TENT, TREE, EMPTY, TENT, TENT, EMPTY, TENT, EMPTY,
+      TREE, EMPTY, EMPTY, EMPTY, TREE, EMPTY, TREE, EMPTY,
+      TENT, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+      TREE, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY};
+  g = game_new(squares_2, nb_tents_row, nb_tents_col);
+  assert(g);
+  if (game_is_over(g)) {
+    return false;
+  }
+
+  // Only Rule 3 is true
+  square squares_3[DEFAULT_SIZE * DEFAULT_SIZE] = {
+      TENT, TENT, TENT, TENT, TREE, TREE, TENT, TENT,
+      TREE, TENT, TENT, TENT, TENT, TENT, TENT, TREE,
+      EMPTY, EMPTY, EMPTY, EMPTY, TREE, EMPTY, EMPTY, EMPTY,
+      TREE, EMPTY, EMPTY, EMPTY, EMPTY, TREE, EMPTY, EMPTY,
+      EMPTY, TREE, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+      TREE, EMPTY, EMPTY, EMPTY, TREE, EMPTY, TREE, EMPTY,
+      EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+      TREE, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY};
+  g = game_new(squares_3, nb_tents_row, nb_tents_col);
+  assert(g);
+  if (game_is_over(g)) {
+    return false;
+  }
+
+  // Only Rule 4 is true
+  square squares_4[DEFAULT_SIZE * DEFAULT_SIZE] = {
+      TENT, TENT, TENT, TENT, TREE, TREE, TENT, TENT,
+      TREE, TENT, TENT, TENT, TENT, TENT, TENT, TREE,
+      TENT, TENT, TENT, TENT, TREE, TENT, TENT, TENT,
+      TREE, TENT, TENT, TENT, TENT, TREE, TENT, TENT,
+      TENT, TREE, TENT, TENT, TENT, TENT, TENT, TENT,
+      TREE, TENT, TENT, TENT, TREE, TENT, TREE, TENT,
+      TENT, TENT, TENT, TENT, TENT, TENT, TENT, TENT,
+      TREE, TENT, TENT, TENT, TENT, TENT, TENT, TENT};
+  g = game_new(squares_4, nb_tents_row, nb_tents_col);
+  assert(g);
+  if (game_is_over(g)) {
+    return false;
+  }
+
+  // Only Rule 1 is false
+  uint nb_tents_row_5[DEFAULT_SIZE] = {2, 1, 3, 1, 2, 1, 2, 0};
+  uint nb_tents_col_5[DEFAULT_SIZE] = {1, 3, 0, 3, 0, 2, 2, 1};
+  square squares_5[DEFAULT_SIZE * DEFAULT_SIZE] = {
+      TREE, TENT, EMPTY, EMPTY, EMPTY, EMPTY, TENT, TREE,
+      EMPTY, EMPTY, EMPTY, TENT, TREE, EMPTY, EMPTY, EMPTY,
+      TENT, EMPTY, EMPTY, TENT, TREE, EMPTY, EMPTY, TENT,
+      TREE, EMPTY, EMPTY, EMPTY, TREE, TENT, EMPTY, TREE,
+      EMPTY, TENT, TREE, TREE, EMPTY, EMPTY, TENT, TREE,
+      EMPTY, EMPTY, EMPTY, TENT, EMPTY, TREE, EMPTY, EMPTY,
+      EMPTY, TENT, EMPTY, EMPTY, EMPTY, TENT, EMPTY, EMPTY,
+      EMPTY, TREE, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY};
+  g = game_new(squares_5, nb_tents_row_5, nb_tents_col_5);
+  assert(g);
+  if (game_is_over(g)) {
+    return false;
+  }
+
+  // Only Rule 2 is false
+  square squares_6[DEFAULT_SIZE * DEFAULT_SIZE] = {
+      TENT, EMPTY, EMPTY, TENT, TREE, TREE, TENT, EMPTY,
+      TREE, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, TREE,
+      TENT, EMPTY, EMPTY, TENT, TREE, TENT, EMPTY, TENT,
+      TREE, EMPTY, EMPTY, EMPTY, EMPTY, TREE, EMPTY, EMPTY,
+      TENT, TREE, TENT, EMPTY, EMPTY, EMPTY, TENT, EMPTY,
+      TREE, EMPTY, EMPTY, EMPTY, TREE, EMPTY, TREE, EMPTY,
+      TENT, EMPTY, EMPTY, EMPTY, TENT, EMPTY, EMPTY, EMPTY,
+      TREE, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY};
+  g = game_new(squares_6, nb_tents_row, nb_tents_col);
+  assert(g);
+  if (game_is_over(g)) {
+    return false;
+  }
+
+  // Only Rule 2,3 are false
+  square squares_7[DEFAULT_SIZE * DEFAULT_SIZE] = {
+      EMPTY, EMPTY, EMPTY, TENT, TREE, TREE, TENT, EMPTY,
+      TREE, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, TREE,
+      TENT, EMPTY, EMPTY, TENT, TREE, TENT, EMPTY, TENT,
+      TREE, EMPTY, EMPTY, EMPTY, EMPTY, TREE, EMPTY, EMPTY,
+      TENT, TREE, TENT, EMPTY, EMPTY, EMPTY, TENT, EMPTY,
+      TREE, EMPTY, EMPTY, EMPTY, TREE, EMPTY, TREE, EMPTY,
+      TENT, EMPTY, EMPTY, EMPTY, TENT, EMPTY, EMPTY, EMPTY,
+      TREE, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY};
+  g = game_new(squares_7, nb_tents_row, nb_tents_col);
+  assert(g);
+  if (game_is_over(g)) {
+    return false;
+  }
+
+  // Only Rule 4 is false
+  uint nb_tents_row_8[DEFAULT_SIZE] = {0, 3, 0, 4, 0, 4, 0, 1};
+  uint nb_tents_col_8[DEFAULT_SIZE] = {3, 1, 1, 2, 1, 1, 1, 2};
+  square squares_8[DEFAULT_SIZE * DEFAULT_SIZE] = {
+      TREE, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+      TENT, EMPTY, EMPTY, TENT, TREE, TREE, EMPTY, TENT,
+      TREE, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+      TENT, TREE, TENT, EMPTY, TENT, EMPTY, TENT, EMPTY,
+      EMPTY, EMPTY, EMPTY, EMPTY, TREE, EMPTY, EMPTY, TREE,
+      EMPTY, TENT, TREE, TENT, EMPTY, TENT, TREE, TENT,
+      EMPTY, TREE, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, TREE,
+      TENT, TREE, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY};
+  g = game_new(squares_8, nb_tents_row_8, nb_tents_col_8);
+  assert(g);
+  if (game_is_over(g)) {
+    return false;
+  }
+
+  game_delete(g);
+  return true;
+}
 
 bool test_game_fill_grass_row() {
   game g1 = game_default();
