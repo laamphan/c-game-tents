@@ -7,7 +7,7 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -std=c99 -g")
 set(CMAKE_C_COMPILER gcc)
 
-add_library(game game.o game_aux.c)
+add_library(game game.c game_aux.c)
 
 add_executable(game_text game_text.c) 
 target_link_libraries(game_text game)
