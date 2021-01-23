@@ -1,10 +1,11 @@
 cmake_minimum_required(VERSION 2.6)
 project(c-game-tents)
 
+enable_testing()
 include(CTest)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -std=c99 -g")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -std=c99 -g --coverage")
 set(CMAKE_C_COMPILER gcc)
 
 add_library(game game.c game_aux.c)
