@@ -1802,6 +1802,40 @@ bool test_game_is_over() {
     return false;
   }
 
+  // Game is already over with all grass
+  square squares_9[DEFAULT_SIZE * DEFAULT_SIZE] = {
+      TENT, GRASS, GRASS, TENT, TREE, TREE, TENT, GRASS,
+      TREE, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, TREE,
+      TENT, GRASS, GRASS, TENT, TREE, TENT, GRASS, TENT,
+      TREE, GRASS, GRASS, GRASS, GRASS, TREE, GRASS, GRASS,
+      TENT, TREE, TENT, GRASS, TENT, GRASS, TENT, GRASS,
+      TREE, GRASS, GRASS, GRASS, TREE, GRASS, TREE, GRASS,
+      TENT, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS,
+      TREE, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS};
+  game_delete(g);
+  g = game_new(squares_9, nb_tents_row, nb_tents_col);
+  assert(g);
+  if (!game_is_over(g)) {
+    return false;
+  }
+
+  // Game is already over with no grass
+  square squares_10[DEFAULT_SIZE * DEFAULT_SIZE] = {
+      TENT, EMPTY, EMPTY, TENT, TREE, TREE, TENT, EMPTY,
+      TREE, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, TREE,
+      TENT, EMPTY, EMPTY, TENT, TREE, TENT, EMPTY, TENT,
+      TREE, EMPTY, EMPTY, EMPTY, EMPTY, TREE, EMPTY, EMPTY,
+      TENT, TREE, TENT, EMPTY, TENT, EMPTY, TENT, EMPTY,
+      TREE, EMPTY, EMPTY, EMPTY, TREE, EMPTY, TREE, EMPTY,
+      TENT, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+      TREE, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY};
+  game_delete(g);
+  g = game_new(squares_10, nb_tents_row, nb_tents_col);
+  assert(g);
+  if (!game_is_over(g)) {
+    return false;
+  }
+
   game_delete(g);
   return true;
 }
