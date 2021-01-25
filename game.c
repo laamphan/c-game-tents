@@ -36,6 +36,11 @@ square squares_default_solution[DEFAULT_SIZE * DEFAULT_SIZE] = {
     TENT, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS,
     TREE, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS};
 
+//* Aux functions
+uint game_get_nb_adj_square(cgame g, uint i, uint j, square s);
+uint game_get_nb_diag_adj_tents(cgame g, uint i, uint j);
+
+//* Required functions
 game game_new(square *squares, uint *nb_tents_row, uint *nb_tents_col) {
   uint nb_rows = DEFAULT_SIZE;
   uint nb_cols = DEFAULT_SIZE;
@@ -336,4 +341,69 @@ void game_restart(game g) {
       g->squares[k] = EMPTY;
     }
   }
+}
+
+uint game_get_nb_adj_square(cgame g, uint i, uint j, square s) {
+  assert(g);
+  assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  uint nb_rows = g->nb_rows;
+  uint nb_cols = g->nb_cols;
+  assert(i >= 0 && i < nb_rows);
+  assert(j >= 0 && j < nb_cols);
+  assert(s >= 0 && s <= 3);
+
+  uint count = 0;
+  if ((int)(i - 1) >= 0) {
+    if (game_get_square(g, i - 1, j) == s) {
+      count++;
+    }
+  }
+  if ((int)(j - 1) >= 0) {
+    if (game_get_square(g, i, j - 1) == s) {
+      count++;
+    }
+  }
+  if ((j + 1) < nb_cols) {
+    if (game_get_square(g, i, j + 1) == s) {
+      count++;
+    }
+  }
+  if ((i + 1) < nb_rows) {
+    if (game_get_square(g, i + 1, j) == s) {
+      count++;
+    }
+  }
+  return count;
+}
+
+uint game_get_nb_diag_adj_tents(cgame g, uint i, uint j) {
+  assert(g);
+  assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  uint nb_rows = g->nb_rows;
+  uint nb_cols = g->nb_cols;
+  assert(i >= 0 && i < nb_rows);
+  assert(j >= 0 && j < nb_cols);
+
+  uint count = 0;
+  if ((int)(i - 1) >= 0 && (int)(j - 1) >= 0) {
+    if (game_get_square(g, i - 1, j - 1) == TENT) {
+      count++;
+    }
+  }
+  if ((int)(i - 1) >= 0 && (j + 1) < nb_cols) {
+    if (game_get_square(g, i - 1, j + 1) == TENT) {
+      count++;
+    }
+  }
+  if ((i + 1) < nb_rows && (int)(j - 1) >= 0) {
+    if (game_get_square(g, i + 1, j - 1) == TENT) {
+      count++;
+    }
+  }
+  if ((i + 1) < nb_rows && (j + 1) < nb_cols) {
+    if (game_get_square(g, i + 1, j + 1) == TENT) {
+      count++;
+    }
+  }
+  return count;
 }
