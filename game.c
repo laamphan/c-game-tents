@@ -62,7 +62,6 @@ game game_new(square *squares, uint *nb_tents_row, uint *nb_tents_col) {
   }
   g->nb_rows = nb_rows;
   g->nb_cols = nb_cols;
-
   return g;
 }
 
@@ -87,7 +86,6 @@ game game_new_empty(void) {
   }
   g->nb_rows = nb_rows;
   g->nb_cols = nb_cols;
-
   return g;
 }
 
@@ -109,9 +107,8 @@ game game_copy(cgame g) {
   for (uint k = 0; k < (nb_rows * nb_cols); k++) {
     g_copy->squares[k] = g->squares[k];
   }
-  g_copy->nb_rows = nb_rows;
-  g_copy->nb_cols = nb_cols;
-
+  g_copy->nb_rows = g->nb_rows;
+  g_copy->nb_cols = g->nb_cols;
   return g_copy;
 }
 
@@ -201,7 +198,6 @@ uint game_get_expected_nb_tents_row(cgame g, uint i) {
   assert(g);
   assert(g->squares && g->nb_tents_row && g->nb_tents_col);
   uint nb_rows = g->nb_rows;
-  // uint nb_cols = g->nb_cols;
   assert(i >= 0 && i < nb_rows);
 
   return g->nb_tents_row[i];
@@ -210,7 +206,6 @@ uint game_get_expected_nb_tents_row(cgame g, uint i) {
 uint game_get_expected_nb_tents_col(cgame g, uint j) {
   assert(g);
   assert(g->squares && g->nb_tents_row && g->nb_tents_col);
-  // uint nb_rows = g->nb_rows;
   uint nb_cols = g->nb_cols;
   assert(j >= 0 && j < nb_cols);
 
@@ -299,7 +294,46 @@ int game_check_move(cgame g, uint i, uint j, square s) {
 }
 
 bool game_is_over(cgame g) {
-  return false;
+  assert(g);
+  assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  uint nb_rows = g->nb_rows;
+  uint nb_cols = g->nb_cols;
+
+  if (game_get_current_nb_tents_all(g) != game_get_expected_nb_tents_all(g)) {
+    return false;
+  }
+  for (uint i = 0; i < nb_rows; i++) {
+    if (game_get_current_nb_tents_row(g, i) !=
+        game_get_expected_nb_tents_row(g, i)) {
+      return false;
+    }
+  }
+  for (uint j = 0; j < nb_cols; j++) {
+    if (game_get_current_nb_tents_col(g, j) !=
+        game_get_expected_nb_tents_col(g, j)) {
+      return false;
+    }
+  }
+  for (uint i = 0; i < nb_rows; i++) {
+    for (uint j = 0; j < nb_cols; j++) {
+      if (game_get_square(g, i, j) == TREE) {
+        if (game_get_nb_adj_square(g, i, j, TENT) == 0) {
+          return false;
+        }
+      } else if (game_get_square(g, i, j) == TENT) {
+        if (game_get_nb_adj_square(g, i, j, TREE) == 0) {
+          return false;
+        }
+        if (game_get_nb_adj_square(g, i, j, TENT) > 0) {
+          return false;
+        }
+        if (game_get_nb_diag_adj_tents(g, i, j) > 0) {
+          return false;
+        }
+      }
+    }
+  }
+  return true;
 }
 
 void game_fill_grass_row(game g, uint i) {
@@ -319,7 +353,6 @@ void game_fill_grass_row(game g, uint i) {
 void game_fill_grass_col(game g, uint j) {
   assert(g);
   assert(g->squares && g->nb_tents_row && g->nb_tents_col);
-  // uint nb_rows = g->nb_rows;
   uint nb_cols = g->nb_cols;
   assert(j >= 0 && j < nb_cols);
 
