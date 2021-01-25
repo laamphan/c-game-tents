@@ -13,32 +13,12 @@ struct game_s {
   uint nb_cols;
 };
 
-uint nb_tents_row_default[DEFAULT_SIZE] = {3, 0, 4, 0, 4, 0, 1, 0};
-uint nb_tents_col_default[DEFAULT_SIZE] = {4, 0, 1, 2, 1, 1, 2, 1};
-
-square squares_default[DEFAULT_SIZE * DEFAULT_SIZE] = {
-    EMPTY, EMPTY, EMPTY, EMPTY, TREE, TREE, EMPTY, EMPTY,
-    TREE, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, TREE,
-    EMPTY, EMPTY, EMPTY, EMPTY, TREE, EMPTY, EMPTY, EMPTY,
-    TREE, EMPTY, EMPTY, EMPTY, EMPTY, TREE, EMPTY, EMPTY,
-    EMPTY, TREE, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-    TREE, EMPTY, EMPTY, EMPTY, TREE, EMPTY, TREE, EMPTY,
-    EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-    TREE, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY};
-
-square squares_default_solution[DEFAULT_SIZE * DEFAULT_SIZE] = {
-    TENT, GRASS, GRASS, TENT, TREE, TREE, TENT, GRASS,
-    TREE, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, TREE,
-    TENT, GRASS, GRASS, TENT, TREE, TENT, GRASS, TENT,
-    TREE, GRASS, GRASS, GRASS, GRASS, TREE, GRASS, GRASS,
-    TENT, TREE, TENT, GRASS, TENT, GRASS, TENT, GRASS,
-    TREE, GRASS, GRASS, GRASS, TREE, GRASS, TREE, GRASS,
-    TENT, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS,
-    TREE, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS};
-
-//* Aux functions
-uint game_get_nb_adj_square(cgame g, uint i, uint j, square s);
-uint game_get_nb_diag_adj_tents(cgame g, uint i, uint j);
+//* Aux functions prototypes
+uint game_get_nb_adj(cgame g, uint i, uint j, square s);
+uint game_get_nb_tents_diag_adj(cgame g, uint i, uint j);
+uint game_get_current_nb_emptys_row(cgame g, uint i);
+uint game_get_current_nb_emptys_col(cgame g, uint j);
+uint game_get_current_nb_emptys_all(cgame g);
 
 //* Required functions
 game game_new(square *squares, uint *nb_tents_row, uint *nb_tents_col) {
@@ -288,8 +268,171 @@ void game_play_move(game g, uint i, uint j, square s) {
   g->squares[i * nb_cols + j] = s;
 }
 
-// TODO
 int game_check_move(cgame g, uint i, uint j, square s) {
+  assert(g);
+  assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  uint nb_rows = g->nb_rows;
+  uint nb_cols = g->nb_cols;
+  assert(i >= 0 && i < nb_rows);
+  assert(j >= 0 && j < nb_cols);
+  assert(s >= 0 && s <= 3);
+
+  if (s == TREE || game_get_square(g, i, j) == TREE) {
+    return ILLEGAL;
+  }
+
+  else if (s == EMPTY) {
+    return REGULAR;
+  }
+
+  else if (s == TENT) {
+    if (game_get_square(g, i, j) == EMPTY ||
+        game_get_square(g, i, j) == GRASS) {
+      if (game_get_expected_nb_tents_row(g, i) <
+              (game_get_current_nb_tents_row(g, i) + 1) ||
+          game_get_expected_nb_tents_col(g, j) <
+              (game_get_current_nb_tents_col(g, j) + 1) ||
+          game_get_expected_nb_tents_all(g) <
+              (game_get_current_nb_tents_all(g) + 1)) {
+        return LOSING;
+      }
+    } else if (game_get_square(g, i, j) == TENT) {
+      if (game_get_expected_nb_tents_row(g, i) <
+              game_get_current_nb_tents_row(g, i) ||
+          game_get_expected_nb_tents_col(g, j) <
+              game_get_current_nb_tents_col(g, j) ||
+          game_get_expected_nb_tents_all(g) <
+              game_get_current_nb_tents_all(g)) {
+        return LOSING;
+      }
+    }
+    if ((game_get_nb_adj(g, i, j, TENT) +
+         game_get_nb_tents_diag_adj(g, i, j)) > 0 ||
+        game_get_nb_adj(g, i, j, TREE) == 0) {
+      return LOSING;
+    }
+  }
+
+  else if (s == GRASS) {
+    //* LOSING case: too many GRASS: play GRASS on EMPTY / TENT / GRASS square
+    // on EMPTY square
+    if (game_get_square(g, i, j) == EMPTY) {
+      if ((game_get_current_nb_emptys_row(g, i) - 1) <
+          (game_get_expected_nb_tents_row(g, i) -
+           game_get_current_nb_tents_row(g, i))) {
+        return LOSING;
+      }
+      if ((game_get_current_nb_emptys_col(g, j) - 1) <
+          (game_get_expected_nb_tents_col(g, j) -
+           game_get_current_nb_tents_col(g, j))) {
+        return LOSING;
+      }
+      if ((game_get_current_nb_emptys_all(g) - 1) <
+          (game_get_expected_nb_tents_all(g) -
+           game_get_current_nb_tents_all(g))) {
+        return LOSING;
+      }
+    }
+    // on TENT square
+    else if (game_get_square(g, i, j) == TENT) {
+      if (game_get_current_nb_emptys_row(g, i) <
+          (game_get_expected_nb_tents_row(g, i) -
+           game_get_current_nb_tents_row(g, i) + 1)) {
+        return LOSING;
+      }
+      if (game_get_current_nb_emptys_col(g, j) <
+          (game_get_expected_nb_tents_col(g, j) -
+           game_get_current_nb_tents_col(g, j) + 1)) {
+        return LOSING;
+      }
+      if (game_get_current_nb_emptys_all(g) <
+          (game_get_expected_nb_tents_all(g) -
+           game_get_current_nb_tents_all(g) + 1)) {
+        return LOSING;
+      }
+    }
+    // on GRASS square
+    else if (game_get_square(g, i, j) == GRASS) {
+      if (game_get_current_nb_emptys_row(g, i) <
+          (game_get_expected_nb_tents_row(g, i) -
+           game_get_current_nb_tents_row(g, i))) {
+        return LOSING;
+      }
+      if (game_get_current_nb_emptys_col(g, j) <
+          (game_get_expected_nb_tents_col(g, j) -
+           game_get_current_nb_tents_col(g, j))) {
+        return LOSING;
+      }
+      if (game_get_current_nb_emptys_all(g) <
+          (game_get_expected_nb_tents_all(g) -
+           game_get_current_nb_tents_all(g))) {
+        return LOSING;
+      }
+    }
+
+    //* LOSING case: block a tree from receving a tent
+    if ((int)(i - 1) >= 0) {
+      if (game_get_square(g, i - 1, j) == TREE) {
+        if (game_get_square(g, i, j) == EMPTY) {
+          if (game_get_nb_adj(g, i - 1, j, EMPTY) == 1 &&
+              game_get_nb_adj(g, i - 1, j, TENT) == 0) {
+            return false;
+          }
+        } else if (game_get_square(g, i, j) == TENT) {
+          if (game_get_nb_adj(g, i - 1, j, EMPTY) == 0 &&
+              game_get_nb_adj(g, i - 1, j, TENT) == 1) {
+            return false;
+          }
+        }
+      }
+    }
+    if ((int)(j - 1) >= 0) {
+      if (game_get_square(g, i, j - 1) == TREE) {
+        if (game_get_square(g, i, j) == EMPTY) {
+          if (game_get_nb_adj(g, i, j - 1, EMPTY) == 1 &&
+              game_get_nb_adj(g, i, j - 1, TENT) == 0) {
+            return false;
+          }
+        } else if (game_get_square(g, i, j) == TENT) {
+          if (game_get_nb_adj(g, i, j - 1, EMPTY) == 0 &&
+              game_get_nb_adj(g, i, j - 1, TENT) == 1) {
+            return false;
+          }
+        }
+      }
+    }
+    if (j + 1 < nb_cols) {
+      if (game_get_square(g, i, j + 1) == TREE) {
+        if (game_get_square(g, i, j) == EMPTY) {
+          if (game_get_nb_adj(g, i, j + 1, EMPTY) == 1 &&
+              game_get_nb_adj(g, i, j + 1, TENT) == 0) {
+            return false;
+          }
+        } else if (game_get_square(g, i, j) == TENT) {
+          if (game_get_nb_adj(g, i, j + 1, EMPTY) == 0 &&
+              game_get_nb_adj(g, i, j + 1, TENT) == 1) {
+            return false;
+          }
+        }
+      }
+    }
+    if (i + 1 < nb_rows) {
+      if (game_get_square(g, i + 1, j) == TREE) {
+        if (game_get_square(g, i, j) == EMPTY) {
+          if (game_get_nb_adj(g, i + 1, j, EMPTY) == 1 &&
+              game_get_nb_adj(g, i + 1, j, TENT) == 0) {
+            return false;
+          }
+        } else if (game_get_square(g, i, j) == TENT) {
+          if (game_get_nb_adj(g, i + 1, j, EMPTY) == 0 &&
+              game_get_nb_adj(g, i + 1, j, TENT) == 1) {
+            return false;
+          }
+        }
+      }
+    }
+  }
+
   return REGULAR;
 }
 
@@ -317,17 +460,17 @@ bool game_is_over(cgame g) {
   for (uint i = 0; i < nb_rows; i++) {
     for (uint j = 0; j < nb_cols; j++) {
       if (game_get_square(g, i, j) == TREE) {
-        if (game_get_nb_adj_square(g, i, j, TENT) == 0) {
+        if (game_get_nb_adj(g, i, j, TENT) == 0) {
           return false;
         }
       } else if (game_get_square(g, i, j) == TENT) {
-        if (game_get_nb_adj_square(g, i, j, TREE) == 0) {
+        if (game_get_nb_adj(g, i, j, TREE) == 0) {
           return false;
         }
-        if (game_get_nb_adj_square(g, i, j, TENT) > 0) {
+        if (game_get_nb_adj(g, i, j, TENT) > 0) {
           return false;
         }
-        if (game_get_nb_diag_adj_tents(g, i, j) > 0) {
+        if (game_get_nb_tents_diag_adj(g, i, j) > 0) {
           return false;
         }
       }
@@ -376,7 +519,9 @@ void game_restart(game g) {
   }
 }
 
-uint game_get_nb_adj_square(cgame g, uint i, uint j, square s) {
+//* Aux functions
+
+uint game_get_nb_adj(cgame g, uint i, uint j, square s) {
   assert(g);
   assert(g->squares && g->nb_tents_row && g->nb_tents_col);
   uint nb_rows = g->nb_rows;
@@ -409,7 +554,7 @@ uint game_get_nb_adj_square(cgame g, uint i, uint j, square s) {
   return count;
 }
 
-uint game_get_nb_diag_adj_tents(cgame g, uint i, uint j) {
+uint game_get_nb_tents_diag_adj(cgame g, uint i, uint j) {
   assert(g);
   assert(g->squares && g->nb_tents_row && g->nb_tents_col);
   uint nb_rows = g->nb_rows;
@@ -436,6 +581,55 @@ uint game_get_nb_diag_adj_tents(cgame g, uint i, uint j) {
   if ((i + 1) < nb_rows && (j + 1) < nb_cols) {
     if (game_get_square(g, i + 1, j + 1) == TENT) {
       count++;
+    }
+  }
+  return count;
+}
+
+uint game_get_current_nb_emptys_row(cgame g, uint i) {
+  assert(g);
+  assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  uint nb_rows = g->nb_rows;
+  uint nb_cols = g->nb_cols;
+  assert(i >= 0 && i < nb_rows);
+
+  uint count = 0;
+  for (uint j = 0; j < nb_cols; j++) {
+    if (game_get_square(g, i, j) == EMPTY) {
+      count++;
+    }
+  }
+  return count;
+}
+
+uint game_get_current_nb_emptys_col(cgame g, uint j) {
+  assert(g);
+  assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  uint nb_rows = g->nb_rows;
+  uint nb_cols = g->nb_cols;
+  assert(j >= 0 && j < nb_cols);
+
+  uint count = 0;
+  for (uint i = 0; i < nb_rows; i++) {
+    if (game_get_square(g, i, j) == EMPTY) {
+      count++;
+    }
+  }
+  return count;
+}
+
+uint game_get_current_nb_emptys_all(cgame g) {
+  assert(g);
+  assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  uint nb_rows = g->nb_rows;
+  uint nb_cols = g->nb_cols;
+
+  uint count = 0;
+  for (uint i = 0; i < nb_rows; i++) {
+    for (uint j = 0; j < nb_cols; j++) {
+      if (game_get_square(g, i, j) == EMPTY) {
+        count++;
+      }
     }
   }
   return count;
