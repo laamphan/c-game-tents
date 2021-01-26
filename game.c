@@ -156,9 +156,9 @@ void game_set_expected_nb_tents_row(game g, uint i, uint nb_tents) {
   assert(g);
   assert(g->squares && g->nb_tents_row && g->nb_tents_col);
   uint nb_rows = g->nb_rows;
-  uint nb_cols = g->nb_cols;
+  // uint nb_cols = g->nb_cols;
   assert(i >= 0 && i < nb_rows);
-  assert(nb_tents <= (nb_cols / 2 + nb_cols % 2));
+  // assert(nb_tents <= (nb_cols / 2 + nb_cols % 2));
 
   g->nb_tents_row[i] = nb_tents;
 }
@@ -166,10 +166,10 @@ void game_set_expected_nb_tents_row(game g, uint i, uint nb_tents) {
 void game_set_expected_nb_tents_col(game g, uint j, uint nb_tents) {
   assert(g);
   assert(g->squares && g->nb_tents_row && g->nb_tents_col);
-  uint nb_rows = g->nb_rows;
+  // uint nb_rows = g->nb_rows;
   uint nb_cols = g->nb_cols;
   assert(j >= 0 && j < nb_cols);
-  assert(nb_tents <= (nb_rows / 2 + nb_rows % 2));
+  // assert(nb_tents <= (nb_rows / 2 + nb_rows % 2));
 
   g->nb_tents_col[j] = nb_tents;
 }
@@ -376,12 +376,12 @@ int game_check_move(cgame g, uint i, uint j, square s) {
         if (game_get_square(g, i, j) == EMPTY) {
           if (game_get_nb_adj(g, i - 1, j, EMPTY) == 1 &&
               game_get_nb_adj(g, i - 1, j, TENT) == 0) {
-            return false;
+            return LOSING;
           }
         } else if (game_get_square(g, i, j) == TENT) {
           if (game_get_nb_adj(g, i - 1, j, EMPTY) == 0 &&
               game_get_nb_adj(g, i - 1, j, TENT) == 1) {
-            return false;
+            return LOSING;
           }
         }
       }
@@ -391,12 +391,12 @@ int game_check_move(cgame g, uint i, uint j, square s) {
         if (game_get_square(g, i, j) == EMPTY) {
           if (game_get_nb_adj(g, i, j - 1, EMPTY) == 1 &&
               game_get_nb_adj(g, i, j - 1, TENT) == 0) {
-            return false;
+            return LOSING;
           }
         } else if (game_get_square(g, i, j) == TENT) {
           if (game_get_nb_adj(g, i, j - 1, EMPTY) == 0 &&
               game_get_nb_adj(g, i, j - 1, TENT) == 1) {
-            return false;
+            return LOSING;
           }
         }
       }
@@ -406,12 +406,12 @@ int game_check_move(cgame g, uint i, uint j, square s) {
         if (game_get_square(g, i, j) == EMPTY) {
           if (game_get_nb_adj(g, i, j + 1, EMPTY) == 1 &&
               game_get_nb_adj(g, i, j + 1, TENT) == 0) {
-            return false;
+            return LOSING;
           }
         } else if (game_get_square(g, i, j) == TENT) {
           if (game_get_nb_adj(g, i, j + 1, EMPTY) == 0 &&
               game_get_nb_adj(g, i, j + 1, TENT) == 1) {
-            return false;
+            return LOSING;
           }
         }
       }
@@ -421,12 +421,12 @@ int game_check_move(cgame g, uint i, uint j, square s) {
         if (game_get_square(g, i, j) == EMPTY) {
           if (game_get_nb_adj(g, i + 1, j, EMPTY) == 1 &&
               game_get_nb_adj(g, i + 1, j, TENT) == 0) {
-            return false;
+            return LOSING;
           }
         } else if (game_get_square(g, i, j) == TENT) {
           if (game_get_nb_adj(g, i + 1, j, EMPTY) == 0 &&
               game_get_nb_adj(g, i + 1, j, TENT) == 1) {
-            return false;
+            return LOSING;
           }
         }
       }
