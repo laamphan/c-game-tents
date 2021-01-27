@@ -585,37 +585,86 @@ bool test_game_play_move() {
 }
 
 //TODO
-bool test_game_check_move() {
-  game g = game_default();
-  assert(g);
+bool test_game_check_move_1() {
   uint nb_rows = DEFAULT_SIZE;
   uint nb_cols = DEFAULT_SIZE;
-  square squares[DEFAULT_SIZE * DEFAULT_SIZE] = {
-      EMPTY, EMPTY, EMPTY, EMPTY, TREE, TREE, EMPTY, EMPTY,
-      TREE, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, TREE,
-      EMPTY, EMPTY, EMPTY, EMPTY, TREE, EMPTY, EMPTY, EMPTY,
-      TREE, EMPTY, EMPTY, EMPTY, EMPTY, TREE, EMPTY, EMPTY,
-      EMPTY, TREE, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-      TREE, EMPTY, EMPTY, EMPTY, TREE, EMPTY, TREE, EMPTY,
-      EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-      TREE, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY};
+  //LOSING
+  game g_empty = game_new_empty();
+  assert(g_empty);
+  for (uint i = 0; i < nb_rows; i++) {
+    game_set_expected_nb_tents_row(g_empty, i, 1);
+  }
+  for (uint j = 0; j < nb_cols; j++) {
+    game_set_expected_nb_tents_col(g_empty, j, 1);
+  }
 
-  uint nb_moves = 4800;
+  game_set_square(g_empty, 0, 0, TREE);
+  game_set_square(g_empty, 1, 1, TREE);
+  game_set_square(g_empty, 1, 2, TREE);
+  game_set_square(g_empty, 1, 3, TREE);
+  game_set_square(g_empty, 4, 2, TREE);
+  game_set_square(g_empty, 7, 5, TENT);
+  game_set_square(g_empty, 7, 6, TENT);
+  game_set_square(g_empty, 6, 7, TENT);
+  game_set_square(g_empty, 7, 7, TENT);
+  for (uint j = 1; j < (nb_cols - 1); j++) {
+    game_set_square(g_empty, 0, j, GRASS);
+  }
+
+  // REGULAR move
+  if (game_check_move(g_empty, 2, 1, TENT) != REGULAR) {
+    return false;
+  }
+  game_play_move(g_empty, 2, 1, TENT);
+  // DIAG TENT
+  if (game_check_move(g_empty, 1, 0, TENT) != LOSING) {
+    return false;
+  }
+  // ADJ TENT
+  if (game_check_move(g_empty, 2, 2, TENT) != LOSING) {
+    return false;
+  }
+  // MORE TENTS THAN EXPECTED
+  if (game_check_move(g_empty, 2, 3, TENT) != LOSING) {
+    return false;
+  }
+  // TOO MANY GRASS --> NOT ENOUGH EMPTY FOR TENT
+  if (game_check_move(g_empty, 0, 7, GRASS) != LOSING) {
+    return false;
+  }
+  // MORE TENTS THAN TREES
+  if (game_check_move(g_empty, 0, 3, TENT) != LOSING) {
+    return false;
+  }
+  // TENT WITH NO TREE AROUND
+  if (game_check_move(g_empty, 5, 5, TENT) != LOSING) {
+    return false;
+  }
+
+  game_delete(g_empty);
+  return true;
+}
+
+bool test_game_check_move_2() {
+  uint nb_rows = DEFAULT_SIZE;
+  uint nb_cols = DEFAULT_SIZE;
+  game g = game_default();
+  assert(g);
+
   bool is_losing = false;
-
+  uint nb_moves = 48000;
   uint i, j, s;
   while (nb_moves > 0) {
-    // assert for g->nb_rows failed at nb_moves = 49 if i = rand() % 8
-    // without changing "game.o" this test is not covering all cases
-    i = (uint)(rand() % 8);  //should have been 8 instead of 7 to cover all cases
+    i = (uint)(rand() % 8);
     j = (uint)(rand() % 8);
     s = (uint)(rand() % 4);
-    if (squares[i * nb_cols + j] == TREE || s == TREE) {
+    if (game_get_square(g, i, j) == TREE || s == TREE) {
       if (game_check_move(g, i, j, s) != ILLEGAL) {
         return false;
       }
     } else {
       game_play_move(g, i, j, s);
+
       if (s == EMPTY) {
         if (game_check_move(g, i, j, s) != REGULAR) {
           return false;
@@ -623,9 +672,8 @@ bool test_game_check_move() {
       }
 
       else if (s == GRASS) {
-        //! too many GRASS: each row / col / all
-
-        // GRASS plays on EMPTY square
+        //* LOSING case: too many GRASS: play GRASS on EMPTY / TENT / GRASS square
+        // on EMPTY square
         if (game_get_square(g, i, j) == EMPTY) {
           if (((int)game_get_current_nb_emptys_row_test(g, i) - 1) <
               (int)(game_get_expected_nb_tents_row(g, i) -
@@ -650,7 +698,7 @@ bool test_game_check_move() {
             }
           }
         }
-        // GRASS plays on TENT square
+        // on TENT square
         else if (game_get_square(g, i, j) == TENT) {
           if ((int)game_get_current_nb_emptys_row_test(g, i) <
               (int)(game_get_expected_nb_tents_row(g, i) -
@@ -675,7 +723,7 @@ bool test_game_check_move() {
             }
           }
         }
-        // GRASS plays on GRASS square
+        // on GRASS square
         else if (game_get_square(g, i, j) == GRASS) {
           if ((int)game_get_current_nb_emptys_row_test(g, i) <
               (int)(game_get_expected_nb_tents_row(g, i) -
@@ -701,534 +749,93 @@ bool test_game_check_move() {
           }
         }
 
-        //! prevent tree from receiving tent
-        // case 1: corners
-        if (i == 0 && j == 0) {
-          if (game_get_square(g, i + 1, j) == TREE) {
-            if (game_get_square(g, i, j) == EMPTY) {
-              if (game_get_nb_adj_test(g, i + 1, j, EMPTY) == 1) {
-                if (game_get_nb_adj_test(g, i + 1, j, TENT) == 0) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            } else if (game_get_square(g, i, j) == TENT) {
-              if (game_get_nb_adj_test(g, i + 1, j, EMPTY) == 0) {
-                if (game_get_nb_adj_test(g, i + 1, j, TENT) == 1) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            }
-          }
-          if (game_get_square(g, i, j + 1) == TREE) {
-            if (game_get_square(g, i, j) == EMPTY) {
-              if (game_get_nb_adj_test(g, i, j + 1, EMPTY) == 1) {
-                if (game_get_nb_adj_test(g, i, j + 1, TENT) == 0) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            } else if (game_get_square(g, i, j) == TENT) {
-              if (game_get_nb_adj_test(g, i, j + 1, EMPTY) == 0) {
-                if (game_get_nb_adj_test(g, i, j + 1, TENT) == 1) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            }
-          }
-        } else if (i == 0 && j == (nb_cols - 1)) {
-          if (game_get_square(g, i, j - 1) == TREE) {
-            if (game_get_square(g, i, j) == EMPTY) {
-              if (game_get_nb_adj_test(g, i, j - 1, EMPTY) == 1) {
-                if (game_get_nb_adj_test(g, i, j - 1, TENT) == 0) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            } else if (game_get_square(g, i, j) == TENT) {
-              if (game_get_nb_adj_test(g, i, j - 1, EMPTY) == 0) {
-                if (game_get_nb_adj_test(g, i, j - 1, TENT) == 1) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            }
-          }
-          if (game_get_square(g, i + 1, j) == TREE) {
-            if (game_get_square(g, i, j) == EMPTY) {
-              if (game_get_nb_adj_test(g, i + 1, j, EMPTY) == 1) {
-                if (game_get_nb_adj_test(g, i + 1, j, TENT) == 0) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            } else if (game_get_square(g, i, j) == TENT) {
-              if (game_get_nb_adj_test(g, i + 1, j, EMPTY) == 0) {
-                if (game_get_nb_adj_test(g, i + 1, j, TENT) == 1) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            }
-          }
-        } else if (i == (nb_rows - 1) && j == 0) {
+        //* LOSING case: block a tree from receving a tent
+        if ((int)(i - 1) >= 0) {
           if (game_get_square(g, i - 1, j) == TREE) {
             if (game_get_square(g, i, j) == EMPTY) {
-              if (game_get_nb_adj_test(g, i - 1, j, EMPTY) == 1) {
-                if (game_get_nb_adj_test(g, i - 1, j, TENT) == 0) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
+              if (game_get_nb_adj_test(g, i - 1, j, EMPTY) == 1 &&
+                  game_get_nb_adj_test(g, i - 1, j, TENT) == 0) {
+                is_losing = true;
+                if (game_check_move(g, i, j, s) != LOSING) {
+                  return false;
                 }
               }
             } else if (game_get_square(g, i, j) == TENT) {
-              if (game_get_nb_adj_test(g, i - 1, j, EMPTY) == 0) {
-                if (game_get_nb_adj_test(g, i - 1, j, TENT) == 1) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
+              if (game_get_nb_adj_test(g, i - 1, j, EMPTY) == 0 &&
+                  game_get_nb_adj_test(g, i - 1, j, TENT) == 1) {
+                is_losing = true;
+                if (game_check_move(g, i, j, s) != LOSING) {
+                  return false;
                 }
               }
             }
           }
-          if (game_get_square(g, i, j + 1) == TREE) {
-            if (game_get_square(g, i, j) == EMPTY) {
-              if (game_get_nb_adj_test(g, i, j + 1, EMPTY) == 1) {
-                if (game_get_nb_adj_test(g, i, j + 1, TENT) == 0) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            } else if (game_get_square(g, i, j) == TENT) {
-              if (game_get_nb_adj_test(g, i, j + 1, EMPTY) == 0) {
-                if (game_get_nb_adj_test(g, i, j + 1, TENT) == 1) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            }
-          }
-        } else if (i == (nb_rows - 1) && j == (nb_cols - 1)) {
-          if (game_get_square(g, i - 1, j) == TREE) {
-            if (game_get_square(g, i, j) == EMPTY) {
-              if (game_get_nb_adj_test(g, i - 1, j, EMPTY) == 1) {
-                if (game_get_nb_adj_test(g, i - 1, j, TENT) == 0) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            } else if (game_get_square(g, i, j) == TENT) {
-              if (game_get_nb_adj_test(g, i - 1, j, EMPTY) == 0) {
-                if (game_get_nb_adj_test(g, i - 1, j, TENT) == 1) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            }
-          }
+        }
+        if ((int)(j - 1) >= 0) {
           if (game_get_square(g, i, j - 1) == TREE) {
             if (game_get_square(g, i, j) == EMPTY) {
-              if (game_get_nb_adj_test(g, i, j - 1, EMPTY) == 1) {
-                if (game_get_nb_adj_test(g, i, j - 1, TENT) == 0) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
+              if (game_get_nb_adj_test(g, i, j - 1, EMPTY) == 1 &&
+                  game_get_nb_adj_test(g, i, j - 1, TENT) == 0) {
+                is_losing = true;
+                if (game_check_move(g, i, j, s) != LOSING) {
+                  return false;
                 }
               }
             } else if (game_get_square(g, i, j) == TENT) {
-              if (game_get_nb_adj_test(g, i, j - 1, EMPTY) == 0) {
-                if (game_get_nb_adj_test(g, i, j - 1, TENT) == 1) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
+              if (game_get_nb_adj_test(g, i, j - 1, EMPTY) == 0 &&
+                  game_get_nb_adj_test(g, i, j - 1, TENT) == 1) {
+                is_losing = true;
+                if (game_check_move(g, i, j, s) != LOSING) {
+                  return false;
+                }
+              }
+            }
+          }
+        }
+        if (j + 1 < nb_cols) {
+          if (game_get_square(g, i, j + 1) == TREE) {
+            if (game_get_square(g, i, j) == EMPTY) {
+              if (game_get_nb_adj_test(g, i, j + 1, EMPTY) == 1 &&
+                  game_get_nb_adj_test(g, i, j + 1, TENT) == 0) {
+                is_losing = true;
+                if (game_check_move(g, i, j, s) != LOSING) {
+                  return false;
+                }
+              }
+            } else if (game_get_square(g, i, j) == TENT) {
+              if (game_get_nb_adj_test(g, i, j + 1, EMPTY) == 0 &&
+                  game_get_nb_adj_test(g, i, j + 1, TENT) == 1) {
+                is_losing = true;
+                if (game_check_move(g, i, j, s) != LOSING) {
+                  return false;
+                }
+              }
+            }
+          }
+        }
+        if (i + 1 < nb_rows) {
+          if (game_get_square(g, i + 1, j) == TREE) {
+            if (game_get_square(g, i, j) == EMPTY) {
+              if (game_get_nb_adj_test(g, i + 1, j, EMPTY) == 1 &&
+                  game_get_nb_adj_test(g, i + 1, j, TENT) == 0) {
+                is_losing = true;
+                if (game_check_move(g, i, j, s) != LOSING) {
+                  return false;
+                }
+              }
+            } else if (game_get_square(g, i, j) == TENT) {
+              if (game_get_nb_adj_test(g, i + 1, j, EMPTY) == 0 &&
+                  game_get_nb_adj_test(g, i + 1, j, TENT) == 1) {
+                is_losing = true;
+                if (game_check_move(g, i, j, s) != LOSING) {
+                  return false;
                 }
               }
             }
           }
         }
 
-        // case 2: edges except corners
-        else if (i == 0 && 0 < j && j < (nb_cols - 1)) {
-          if (game_get_square(g, i, j - 1) == TREE) {
-            if (game_get_square(g, i, j) == EMPTY) {
-              if (game_get_nb_adj_test(g, i, j - 1, EMPTY) == 1) {
-                if (game_get_nb_adj_test(g, i, j - 1, TENT) == 0) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            } else if (game_get_square(g, i, j) == TENT) {
-              if (game_get_nb_adj_test(g, i, j - 1, EMPTY) == 0) {
-                if (game_get_nb_adj_test(g, i, j - 1, TENT) == 1) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            }
-          }
-          if (game_get_square(g, i, j + 1) == TREE) {
-            if (game_get_square(g, i, j) == EMPTY) {
-              if (game_get_nb_adj_test(g, i, j + 1, EMPTY) == 1) {
-                if (game_get_nb_adj_test(g, i, j + 1, TENT) == 0) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            } else if (game_get_square(g, i, j) == TENT) {
-              if (game_get_nb_adj_test(g, i, j + 1, EMPTY) == 0) {
-                if (game_get_nb_adj_test(g, i, j + 1, TENT) == 1) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            }
-          }
-          if (game_get_square(g, i + 1, j) == TREE) {
-            if (game_get_square(g, i, j) == EMPTY) {
-              if (game_get_nb_adj_test(g, i + 1, j, EMPTY) == 1) {
-                if (game_get_nb_adj_test(g, i + 1, j, TENT) == 0) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            } else if (game_get_square(g, i, j) == TENT) {
-              if (game_get_nb_adj_test(g, i + 1, j, EMPTY) == 0) {
-                if (game_get_nb_adj_test(g, i + 1, j, TENT) == 1) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            }
-          }
-        } else if (i == (nb_rows - 1) && 0 < j && j < (nb_cols - 1)) {
-          if (game_get_square(g, i, j - 1) == TREE) {
-            if (game_get_square(g, i, j) == EMPTY) {
-              if (game_get_nb_adj_test(g, i, j - 1, EMPTY) == 1) {
-                if (game_get_nb_adj_test(g, i, j - 1, TENT) == 0) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            } else if (game_get_square(g, i, j) == TENT) {
-              if (game_get_nb_adj_test(g, i, j - 1, EMPTY) == 0) {
-                if (game_get_nb_adj_test(g, i, j - 1, TENT) == 1) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            }
-          }
-          if (game_get_square(g, i, j + 1) == TREE) {
-            if (game_get_square(g, i, j) == EMPTY) {
-              if (game_get_nb_adj_test(g, i, j + 1, EMPTY) == 1) {
-                if (game_get_nb_adj_test(g, i, j + 1, TENT) == 0) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            } else if (game_get_square(g, i, j) == TENT) {
-              if (game_get_nb_adj_test(g, i, j + 1, EMPTY) == 0) {
-                if (game_get_nb_adj_test(g, i, j + 1, TENT) == 1) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            }
-          }
-          if (game_get_square(g, i - 1, j) == TREE) {
-            if (game_get_square(g, i, j) == EMPTY) {
-              if (game_get_nb_adj_test(g, i - 1, j, EMPTY) == 1) {
-                if (game_get_nb_adj_test(g, i - 1, j, TENT) == 0) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            } else if (game_get_square(g, i, j) == TENT) {
-              if (game_get_nb_adj_test(g, i - 1, j, EMPTY) == 0) {
-                if (game_get_nb_adj_test(g, i - 1, j, TENT) == 1) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            }
-          }
-        } else if (0 < i && i < (nb_rows - 1) && j == 0) {
-          if (game_get_square(g, i - 1, j) == TREE) {
-            if (game_get_square(g, i, j) == EMPTY) {
-              if (game_get_nb_adj_test(g, i - 1, j, EMPTY) == 1) {
-                if (game_get_nb_adj_test(g, i - 1, j, TENT) == 0) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            } else if (game_get_square(g, i, j) == TENT) {
-              if (game_get_nb_adj_test(g, i - 1, j, EMPTY) == 0) {
-                if (game_get_nb_adj_test(g, i - 1, j, TENT) == 1) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            }
-          }
-          if (game_get_square(g, i + 1, j) == TREE) {
-            if (game_get_square(g, i, j) == EMPTY) {
-              if (game_get_nb_adj_test(g, i + 1, j, EMPTY) == 1) {
-                if (game_get_nb_adj_test(g, i + 1, j, TENT) == 0) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            } else if (game_get_square(g, i, j) == TENT) {
-              if (game_get_nb_adj_test(g, i + 1, j, EMPTY) == 0) {
-                if (game_get_nb_adj_test(g, i + 1, j, TENT) == 1) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            }
-          }
-          if (game_get_square(g, i, j + 1) == TREE) {
-            if (game_get_square(g, i, j) == EMPTY) {
-              if (game_get_nb_adj_test(g, i, j + 1, EMPTY) == 1) {
-                if (game_get_nb_adj_test(g, i, j + 1, TENT) == 0) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            } else if (game_get_square(g, i, j) == TENT) {
-              if (game_get_nb_adj_test(g, i, j + 1, EMPTY) == 0) {
-                if (game_get_nb_adj_test(g, i, j + 1, TENT) == 1) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            }
-          }
-        } else if (0 < i && i < (nb_rows - 1) && j == (nb_cols - 1)) {
-          if (game_get_square(g, i - 1, j) == TREE) {
-            if (game_get_square(g, i, j) == EMPTY) {
-              if (game_get_nb_adj_test(g, i - 1, j, EMPTY) == 1) {
-                if (game_get_nb_adj_test(g, i - 1, j, TENT) == 0) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            } else if (game_get_square(g, i, j) == TENT) {
-              if (game_get_nb_adj_test(g, i - 1, j, EMPTY) == 0) {
-                if (game_get_nb_adj_test(g, i - 1, j, TENT) == 1) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            }
-          }
-          if (game_get_square(g, i + 1, j) == TREE) {
-            if (game_get_square(g, i, j) == EMPTY) {
-              if (game_get_nb_adj_test(g, i + 1, j, EMPTY) == 1) {
-                if (game_get_nb_adj_test(g, i + 1, j, TENT) == 0) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            } else if (game_get_square(g, i, j) == TENT) {
-              if (game_get_nb_adj_test(g, i + 1, j, EMPTY) == 0) {
-                if (game_get_nb_adj_test(g, i + 1, j, TENT) == 1) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            }
-          }
-          if (game_get_square(g, i, j - 1) == TREE) {
-            if (game_get_square(g, i, j) == EMPTY) {
-              if (game_get_nb_adj_test(g, i, j - 1, EMPTY) == 1) {
-                if (game_get_nb_adj_test(g, i, j - 1, TENT) == 0) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            } else if (game_get_square(g, i, j) == TENT) {
-              if (game_get_nb_adj_test(g, i, j - 1, EMPTY) == 0) {
-                if (game_get_nb_adj_test(g, i, j - 1, TENT) == 1) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            }
-          }
-        }
-        // other cases (edges + corners done)
-        else {
-          if (game_get_square(g, i - 1, j) == TREE) {
-            if (game_get_square(g, i, j) == EMPTY) {
-              if (game_get_nb_adj_test(g, i - 1, j, EMPTY) == 1) {
-                if (game_get_nb_adj_test(g, i - 1, j, TENT) == 0) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            } else if (game_get_square(g, i, j) == TENT) {
-              if (game_get_nb_adj_test(g, i - 1, j, EMPTY) == 0) {
-                if (game_get_nb_adj_test(g, i - 1, j, TENT) == 1) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            }
-          }
-          if (game_get_square(g, i, j - 1) == TREE) {
-            if (game_get_square(g, i, j) == EMPTY) {
-              if (game_get_nb_adj_test(g, i, j - 1, EMPTY) == 1) {
-                if (game_get_nb_adj_test(g, i, j - 1, TENT) == 0) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            } else if (game_get_square(g, i, j) == TENT) {
-              if (game_get_nb_adj_test(g, i, j - 1, EMPTY) == 0) {
-                if (game_get_nb_adj_test(g, i, j - 1, TENT) == 1) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            }
-          }
-          if (game_get_square(g, i, j + 1) == TREE) {
-            if (game_get_square(g, i, j) == EMPTY) {
-              if (game_get_nb_adj_test(g, i, j + 1, EMPTY) == 1) {
-                if (game_get_nb_adj_test(g, i, j + 1, TENT) == 0) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            } else if (game_get_square(g, i, j) == TENT) {
-              if (game_get_nb_adj_test(g, i, j + 1, EMPTY) == 0) {
-                if (game_get_nb_adj_test(g, i, j + 1, TENT) == 1) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            }
-          }
-          if (game_get_square(g, i + 1, j) == TREE) {
-            if (game_get_square(g, i, j) == EMPTY) {
-              if (game_get_nb_adj_test(g, i + 1, j, EMPTY) == 1) {
-                if (game_get_nb_adj_test(g, i + 1, j, TENT) == 0) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            } else if (game_get_square(g, i, j) == TENT) {
-              if (game_get_nb_adj_test(g, i + 1, j, EMPTY) == 0) {
-                if (game_get_nb_adj_test(g, i + 1, j, TENT) == 1) {
-                  is_losing = true;
-                  if (game_check_move(g, i, j, s) != LOSING) {
-                    return false;
-                  }
-                }
-              }
-            }
-          }
-        }
-
-        if (game_check_move(g, i, j, s) != REGULAR && !is_losing) {
-          return false;
-        }
-      }
-
-      if (s == TENT) {
+      } else if (s == TENT) {
         //! LOSING IF TOO MANY TENTS
 
         // play TENT on EMPTY / GRASS
@@ -1286,6 +893,7 @@ bool test_game_check_move() {
 
     nb_moves--;
   }
+
   game_delete(g);
   return true;
 }
@@ -1639,8 +1247,10 @@ int main(int argc, char *argv[]) {
     ok = test_game_get_current_nb_tents_all();
   } else if (strcmp(argv[1], "game_play_move") == 0) {
     ok = test_game_play_move();
-  } else if (strcmp(argv[1], "game_check_move") == 0) {
-    ok = test_game_check_move();
+  } else if (strcmp(argv[1], "game_check_move_1") == 0) {
+    ok = test_game_check_move_1();
+  } else if (strcmp(argv[1], "game_check_move_2") == 0) {
+    ok = test_game_check_move_2();
   } else if (strcmp(argv[1], "game_is_over") == 0) {
     ok = test_game_is_over();
   } else if (strcmp(argv[1], "game_fill_grass_row") == 0) {
