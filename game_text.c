@@ -24,6 +24,7 @@ int main(void) {
       printf("> action: restart\n");
       game_restart(g);
     } else if (c == 'q') {
+      game_delete(g);
       printf("> action: quit\n");
       printf("What a shame, you gave up :-(\n");
       return EXIT_SUCCESS;
@@ -66,6 +67,7 @@ int main(void) {
     }
   }
   game_print(g);
+  game_delete(g);
   printf("Congratulations, you won! :-)\n");
   return EXIT_SUCCESS;
 }
