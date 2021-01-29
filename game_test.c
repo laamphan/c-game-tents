@@ -6,6 +6,29 @@
 #include <string.h>
 #include "game_aux.h"
 
+uint nb_tents_row_default_test[DEFAULT_SIZE] = {3, 0, 4, 0, 4, 0, 1, 0};
+uint nb_tents_col_default_test[DEFAULT_SIZE] = {4, 0, 1, 2, 1, 1, 2, 1};
+
+square squares_default_test[DEFAULT_SIZE * DEFAULT_SIZE] = {
+    EMPTY, EMPTY, EMPTY, EMPTY, TREE, TREE, EMPTY, EMPTY,
+    TREE, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, TREE,
+    EMPTY, EMPTY, EMPTY, EMPTY, TREE, EMPTY, EMPTY, EMPTY,
+    TREE, EMPTY, EMPTY, EMPTY, EMPTY, TREE, EMPTY, EMPTY,
+    EMPTY, TREE, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+    TREE, EMPTY, EMPTY, EMPTY, TREE, EMPTY, TREE, EMPTY,
+    EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+    TREE, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY};
+
+square squares_default_test_solution[DEFAULT_SIZE * DEFAULT_SIZE] = {
+    TENT, GRASS, GRASS, TENT, TREE, TREE, TENT, GRASS,
+    TREE, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, TREE,
+    TENT, GRASS, GRASS, TENT, TREE, TENT, GRASS, TENT,
+    TREE, GRASS, GRASS, GRASS, GRASS, TREE, GRASS, GRASS,
+    TENT, TREE, TENT, GRASS, TENT, GRASS, TENT, GRASS,
+    TREE, GRASS, GRASS, GRASS, TREE, GRASS, TREE, GRASS,
+    TENT, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS,
+    TREE, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS};
+
 //* Usage
 void usage(int argc, char *argv[]) {
   fprintf(stderr, "Usage: %s <testname> \n", argv[0]);
@@ -126,27 +149,24 @@ uint game_get_current_nb_emptys_all_test(cgame g) {
 //* Tests
 
 bool test_game_new() {
-  extern uint nb_tents_row_default[DEFAULT_SIZE];
-  extern uint nb_tents_col_default[DEFAULT_SIZE];
-  extern square squares_default[DEFAULT_SIZE * DEFAULT_SIZE];
   uint nb_rows = DEFAULT_SIZE;
   uint nb_cols = DEFAULT_SIZE;
-  game g = game_new(squares_default, nb_tents_row_default, nb_tents_col_default);
+  game g = game_new(squares_default_test, nb_tents_row_default_test, nb_tents_col_default_test);
   assert(g);
 
   for (uint i = 0; i < nb_rows; i++) {
-    if (game_get_expected_nb_tents_row(g, i) != nb_tents_row_default[i]) {
+    if (game_get_expected_nb_tents_row(g, i) != nb_tents_row_default_test[i]) {
       return false;
     }
   }
   for (uint j = 0; j < nb_cols; j++) {
-    if (game_get_expected_nb_tents_col(g, j) != nb_tents_col_default[j]) {
+    if (game_get_expected_nb_tents_col(g, j) != nb_tents_col_default_test[j]) {
       return false;
     }
   }
   for (uint i = 0; i < nb_rows; i++) {
     for (uint j = 0; j < nb_cols; j++) {
-      if (game_get_square(g, i, j) != squares_default[i * nb_cols + j]) {
+      if (game_get_square(g, i, j) != squares_default_test[i * nb_cols + j]) {
         return false;
       }
     }
@@ -282,9 +302,6 @@ bool test_game_equal() {
 }
 
 bool test_game_set_square() {
-  extern square squares_default_solution[DEFAULT_SIZE * DEFAULT_SIZE];
-  extern uint nb_tents_row_default[DEFAULT_SIZE];
-  extern uint nb_tents_col_default[DEFAULT_SIZE];
   uint nb_rows = DEFAULT_SIZE;
   uint nb_cols = DEFAULT_SIZE;
   square squares_empty[DEFAULT_SIZE * DEFAULT_SIZE] = {
@@ -302,7 +319,7 @@ bool test_game_set_square() {
 
   for (uint i = 0; i < nb_rows; i++) {
     for (uint j = 0; j < nb_cols; j++) {
-      game_set_square(g1, i, j, squares_default_solution[i * nb_cols + j]);
+      game_set_square(g1, i, j, squares_default_test_solution[i * nb_cols + j]);
     }
   }
   if (!game_equal(g1, g2)) {
@@ -310,7 +327,7 @@ bool test_game_set_square() {
   }
 
   game_delete(g1);
-  g1 = game_new(squares_empty, nb_tents_row_default, nb_tents_col_default);
+  g1 = game_new(squares_empty, nb_tents_row_default_test, nb_tents_col_default_test);
   assert(g1);
   for (uint i = 0; i < nb_rows; i++) {
     for (uint j = 0; j < nb_cols; j++) {
@@ -326,7 +343,6 @@ bool test_game_set_square() {
 }
 
 bool test_game_get_square() {
-  extern square squares_default_solution[DEFAULT_SIZE * DEFAULT_SIZE];
   uint nb_rows = DEFAULT_SIZE;
   uint nb_cols = DEFAULT_SIZE;
   game g = game_default_solution();
@@ -334,7 +350,7 @@ bool test_game_get_square() {
 
   for (uint i = 0; i < nb_rows; i++) {
     for (uint j = 0; j < nb_cols; j++) {
-      if (game_get_square(g, i, j) != squares_default_solution[i * nb_cols + j]) {
+      if (game_get_square(g, i, j) != squares_default_test_solution[i * nb_cols + j]) {
         return false;
       }
     }
@@ -355,17 +371,14 @@ bool test_game_get_square() {
 }
 
 bool test_game_set_expected_nb_tents_row() {
-  extern uint nb_tents_row_default[DEFAULT_SIZE];
-  extern uint nb_tents_col_default[DEFAULT_SIZE];
-  extern square squares_default[DEFAULT_SIZE * DEFAULT_SIZE];
   uint nb_rows = DEFAULT_SIZE;
   uint nb_tents_row_new[DEFAULT_SIZE] = {0, 0, 0, 0, 0, 0, 0, 0};
   game g1 = game_default();
-  game g2 = game_new(squares_default, nb_tents_row_new, nb_tents_col_default);
+  game g2 = game_new(squares_default_test, nb_tents_row_new, nb_tents_col_default_test);
   assert(g1 && g2);
 
   for (uint i = 0; i < nb_rows; i++) {
-    game_set_expected_nb_tents_row(g2, i, nb_tents_row_default[i]);
+    game_set_expected_nb_tents_row(g2, i, nb_tents_row_default_test[i]);
   }
   if (!game_equal(g1, g2)) {
     return false;
@@ -376,17 +389,14 @@ bool test_game_set_expected_nb_tents_row() {
 }
 
 bool test_game_set_expected_nb_tents_col() {
-  extern uint nb_tents_row_default[DEFAULT_SIZE];
-  extern uint nb_tents_col_default[DEFAULT_SIZE];
-  extern square squares_default[DEFAULT_SIZE * DEFAULT_SIZE];
   uint nb_cols = DEFAULT_SIZE;
   uint nb_tents_col_new[DEFAULT_SIZE] = {0, 0, 0, 0, 0, 0, 0, 0};
   game g1 = game_default();
-  game g2 = game_new(squares_default, nb_tents_row_default, nb_tents_col_new);
+  game g2 = game_new(squares_default_test, nb_tents_row_default_test, nb_tents_col_new);
   assert(g1 && g2);
 
   for (uint j = 0; j < nb_cols; j++) {
-    game_set_expected_nb_tents_col(g2, j, nb_tents_col_default[j]);
+    game_set_expected_nb_tents_col(g2, j, nb_tents_col_default_test[j]);
   }
   if (!game_equal(g1, g2)) {
     return false;
@@ -397,13 +407,12 @@ bool test_game_set_expected_nb_tents_col() {
 }
 
 bool test_game_get_expected_nb_tents_row() {
-  extern uint nb_tents_row_default[DEFAULT_SIZE];
   uint nb_rows = DEFAULT_SIZE;
   game g = game_default();
   assert(g);
 
   for (uint i = 0; i < nb_rows; i++) {
-    if (game_get_expected_nb_tents_row(g, i) != nb_tents_row_default[i]) {
+    if (game_get_expected_nb_tents_row(g, i) != nb_tents_row_default_test[i]) {
       return false;
     }
   }
@@ -412,13 +421,12 @@ bool test_game_get_expected_nb_tents_row() {
 }
 
 bool test_game_get_expected_nb_tents_col() {
-  extern uint nb_tents_col_default[DEFAULT_SIZE];
   uint nb_cols = DEFAULT_SIZE;
   game g = game_default();
   assert(g);
 
   for (uint j = 0; j < nb_cols; j++) {
-    if (game_get_expected_nb_tents_col(g, j) != nb_tents_col_default[j]) {
+    if (game_get_expected_nb_tents_col(g, j) != nb_tents_col_default_test[j]) {
       return false;
     }
   }
@@ -438,7 +446,6 @@ bool test_game_get_expected_nb_tents_all() {
 }
 
 bool test_game_get_current_nb_tents_row() {
-  extern uint nb_tents_row_default[DEFAULT_SIZE];
   uint nb_rows = DEFAULT_SIZE;
   game g = game_default();
   assert(g);
@@ -453,7 +460,7 @@ bool test_game_get_current_nb_tents_row() {
   g = game_default_solution();
   assert(g);
   for (uint i = 0; i < nb_rows; i++) {
-    if (game_get_current_nb_tents_row(g, i) != nb_tents_row_default[i]) {
+    if (game_get_current_nb_tents_row(g, i) != nb_tents_row_default_test[i]) {
       return false;
     }
   }
@@ -462,7 +469,6 @@ bool test_game_get_current_nb_tents_row() {
 }
 
 bool test_game_get_current_nb_tents_col() {
-  extern uint nb_tents_col_default[DEFAULT_SIZE];
   uint nb_cols = DEFAULT_SIZE;
   game g = game_default();
   assert(g);
@@ -477,7 +483,7 @@ bool test_game_get_current_nb_tents_col() {
   g = game_default_solution();
   assert(g);
   for (uint j = 0; j < nb_cols; j++) {
-    if (game_get_current_nb_tents_col(g, j) != nb_tents_col_default[j]) {
+    if (game_get_current_nb_tents_col(g, j) != nb_tents_col_default_test[j]) {
       return false;
     }
   }
@@ -504,8 +510,6 @@ bool test_game_get_current_nb_tents_all() {
 }
 
 bool test_game_play_move() {
-  extern uint nb_tents_row_default[DEFAULT_SIZE];
-  extern uint nb_tents_col_default[DEFAULT_SIZE];
   uint nb_rows = DEFAULT_SIZE;
   uint nb_cols = DEFAULT_SIZE;
   square squares_full_grass[DEFAULT_SIZE * DEFAULT_SIZE] = {
@@ -538,7 +542,7 @@ bool test_game_play_move() {
     }
   }
 
-  game g2 = game_new(squares_full_grass, nb_tents_row_default, nb_tents_col_default);
+  game g2 = game_new(squares_full_grass, nb_tents_row_default_test, nb_tents_col_default_test);
   assert(g2);
   // compare g1 with game filled with GRASS
   if (!game_equal(g1, g2)) {
@@ -555,7 +559,7 @@ bool test_game_play_move() {
   }
 
   game_delete(g2);
-  g2 = game_new(squares_full_tents, nb_tents_row_default, nb_tents_col_default);
+  g2 = game_new(squares_full_tents, nb_tents_row_default_test, nb_tents_col_default_test);
   assert(g2);
   // compare g1 with game filled with TENT
   if (!game_equal(g1, g2)) {
@@ -899,8 +903,6 @@ bool test_game_check_move_2() {
 }
 
 bool test_game_is_over() {
-  extern uint nb_tents_row_default[DEFAULT_SIZE];
-  extern uint nb_tents_col_default[DEFAULT_SIZE];
   game g = game_default();
   assert(g);
 
@@ -915,7 +917,7 @@ bool test_game_is_over() {
       TENT, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
       TREE, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY};
   game_delete(g);
-  g = game_new(squares_1, nb_tents_row_default, nb_tents_col_default);
+  g = game_new(squares_1, nb_tents_row_default_test, nb_tents_col_default_test);
   assert(g);
   if (game_is_over(g)) {
     return false;
@@ -932,7 +934,7 @@ bool test_game_is_over() {
       TENT, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
       TREE, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY};
   game_delete(g);
-  g = game_new(squares_2, nb_tents_row_default, nb_tents_col_default);
+  g = game_new(squares_2, nb_tents_row_default_test, nb_tents_col_default_test);
   assert(g);
   if (game_is_over(g)) {
     return false;
@@ -949,7 +951,7 @@ bool test_game_is_over() {
       EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
       TREE, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY};
   game_delete(g);
-  g = game_new(squares_3, nb_tents_row_default, nb_tents_col_default);
+  g = game_new(squares_3, nb_tents_row_default_test, nb_tents_col_default_test);
   assert(g);
   if (game_is_over(g)) {
     return false;
@@ -966,7 +968,7 @@ bool test_game_is_over() {
       TENT, TENT, TENT, TENT, TENT, TENT, TENT, TENT,
       TREE, TENT, TENT, TENT, TENT, TENT, TENT, TENT};
   game_delete(g);
-  g = game_new(squares_4, nb_tents_row_default, nb_tents_col_default);
+  g = game_new(squares_4, nb_tents_row_default_test, nb_tents_col_default_test);
   assert(g);
   if (game_is_over(g)) {
     return false;
@@ -1002,7 +1004,7 @@ bool test_game_is_over() {
       TENT, EMPTY, EMPTY, EMPTY, TENT, EMPTY, EMPTY, EMPTY,
       TREE, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY};
   game_delete(g);
-  g = game_new(squares_6, nb_tents_row_default, nb_tents_col_default);
+  g = game_new(squares_6, nb_tents_row_default_test, nb_tents_col_default_test);
   assert(g);
   if (game_is_over(g)) {
     return false;
@@ -1019,7 +1021,7 @@ bool test_game_is_over() {
       TENT, EMPTY, EMPTY, EMPTY, TENT, EMPTY, EMPTY, EMPTY,
       TREE, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY};
   game_delete(g);
-  g = game_new(squares_7, nb_tents_row_default, nb_tents_col_default);
+  g = game_new(squares_7, nb_tents_row_default_test, nb_tents_col_default_test);
   assert(g);
   if (game_is_over(g)) {
     return false;
@@ -1055,7 +1057,7 @@ bool test_game_is_over() {
       TENT, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS,
       TREE, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS};
   game_delete(g);
-  g = game_new(squares_9, nb_tents_row_default, nb_tents_col_default);
+  g = game_new(squares_9, nb_tents_row_default_test, nb_tents_col_default_test);
   assert(g);
   if (!game_is_over(g)) {
     return false;
@@ -1072,7 +1074,7 @@ bool test_game_is_over() {
       TENT, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
       TREE, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY};
   game_delete(g);
-  g = game_new(squares_10, nb_tents_row_default, nb_tents_col_default);
+  g = game_new(squares_10, nb_tents_row_default_test, nb_tents_col_default_test);
   assert(g);
   if (!game_is_over(g)) {
     return false;
@@ -1177,11 +1179,8 @@ bool test_game_print() {
 }
 
 bool test_game_default() {
-  extern uint nb_tents_row_default[DEFAULT_SIZE];
-  extern uint nb_tents_col_default[DEFAULT_SIZE];
-  extern square squares_default[DEFAULT_SIZE * DEFAULT_SIZE];
   game g1 = game_default();
-  game g2 = game_new(squares_default, nb_tents_row_default, nb_tents_col_default);
+  game g2 = game_new(squares_default_test, nb_tents_row_default_test, nb_tents_col_default_test);
   assert(g1 && g2);
 
   if (!game_equal(g1, g2)) {
@@ -1193,11 +1192,8 @@ bool test_game_default() {
 }
 
 bool test_game_default_solution() {
-  extern uint nb_tents_row_default[DEFAULT_SIZE];
-  extern uint nb_tents_col_default[DEFAULT_SIZE];
-  extern square squares_default_solution[DEFAULT_SIZE * DEFAULT_SIZE];
   game g1 = game_default_solution();
-  game g2 = game_new(squares_default_solution, nb_tents_row_default, nb_tents_col_default);
+  game g2 = game_new(squares_default_test_solution, nb_tents_row_default_test, nb_tents_col_default_test);
   assert(g1 && g2);
 
   if (!game_equal(g1, g2)) {
