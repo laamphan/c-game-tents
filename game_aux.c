@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include "game.h"
+#include "game_ext.h"
 
 uint nb_tents_row_default[DEFAULT_SIZE] = {3, 0, 4, 0, 4, 0, 1, 0};
 uint nb_tents_col_default[DEFAULT_SIZE] = {4, 0, 1, 2, 1, 1, 2, 1};
@@ -28,10 +29,10 @@ square squares_default_solution[DEFAULT_SIZE * DEFAULT_SIZE] = {
 
 void game_print(cgame g) {
   assert(g);
-  uint nb_rows = DEFAULT_SIZE;
-  uint nb_cols = DEFAULT_SIZE;
-  uint nb_tent_rows[DEFAULT_SIZE];
-  uint nb_tent_cols[DEFAULT_SIZE];
+  uint nb_rows = game_nb_rows(g);
+  uint nb_cols = game_nb_cols(g);
+  uint nb_tent_rows[nb_rows];
+  uint nb_tent_cols[nb_cols];
   square s;
 
   for (uint i = 0; i < nb_rows; i++) {

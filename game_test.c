@@ -749,7 +749,7 @@ bool test_game_check_move_2() {
           }
         }
 
-        //* LOSING case: block a tree from receving a tent
+        //* LOSING case: block a tree from receiving a tent
         if ((int)(i - 1) >= 0) {
           if (game_get_square(g, i - 1, j) == TREE) {
             if (game_get_square(g, i, j) == EMPTY) {

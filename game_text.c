@@ -3,11 +3,55 @@
 #include <stdlib.h>
 #include "game.h"
 #include "game_aux.h"
+#include "game_ext.h"
 
 int main(void) {
   game g = game_default();
   uint nb_rows = DEFAULT_SIZE;
   uint nb_cols = DEFAULT_SIZE;
+
+  // extern uint nb_tents_row_default[DEFAULT_SIZE];
+  // extern uint nb_tents_col_default[DEFAULT_SIZE];
+  // extern square squares_default[DEFAULT_SIZE * DEFAULT_SIZE];
+  // game g = game_new_ext(8, 8, squares_default, nb_tents_row_default, nb_tents_col_default, true, true);
+  // uint nb_rows = DEFAULT_SIZE;
+  // uint nb_cols = DEFAULT_SIZE;
+
+  // uint nb_tents_row_2x4[2] = {1, 1};
+  // uint nb_tents_col_2x4[4] = {0, 1, 0, 1};
+  // square squares_2x4[2 * 4] = {TREE, EMPTY, EMPTY, EMPTY,
+  //                              EMPTY, EMPTY, TREE, EMPTY};
+  // game g = game_new_ext(2, 4, squares_2x4, nb_tents_row_2x4, nb_tents_col_2x4, false, false);
+  // uint nb_rows = 2;
+  // uint nb_cols = 4;
+
+  // uint nb_tents_row_3x3_diag[3] = {1, 1, 0};
+  // uint nb_tents_col_3x3_diag[3] = {1, 1, 0};
+  // square squares_3x3_diag[3 * 3] = {TREE, EMPTY, EMPTY,
+  //                                   EMPTY, TREE, EMPTY,
+  //                                   EMPTY, EMPTY, EMPTY};
+  // game g = game_new_ext(3, 3, squares_3x3_diag, nb_tents_row_3x3_diag, nb_tents_col_3x3_diag, false, true);
+  // uint nb_rows = 3;
+  // uint nb_cols = 3;
+
+  // uint nb_tents_row_3x3_wrap[3] = {1, 0, 0};
+  // uint nb_tents_col_3x3_wrap[3] = {0, 0, 1};
+  // square squares_3x3_diag[3 * 3] = {TREE, EMPTY, EMPTY,
+  //                                   EMPTY, EMPTY, EMPTY,
+  //                                   EMPTY, EMPTY, EMPTY};
+  // game g = game_new_ext(3, 3, squares_3x3_diag, nb_tents_row_3x3_wrap, nb_tents_col_3x3_wrap, true, false);
+  // uint nb_rows = 3;
+  // uint nb_cols = 3;
+
+  // uint nb_tents_row_3x3_wrap_diag[3] = {1, 0, 1};
+  // uint nb_tents_col_3x3_wrap_diag[3] = {1, 0, 1};
+  // square squares_3x3_diag[3 * 3] = {EMPTY, EMPTY, TREE,
+  //                                   EMPTY, EMPTY, EMPTY,
+  //                                   TREE, EMPTY, EMPTY};
+  // game g = game_new_ext(3, 3, squares_3x3_diag, nb_tents_row_3x3_wrap_diag, nb_tents_col_3x3_wrap_diag, true, true);
+  // uint nb_rows = 3;
+  // uint nb_cols = 3;
+
   while (game_is_over(g) == false) {
     game_print(g);
     char c;
