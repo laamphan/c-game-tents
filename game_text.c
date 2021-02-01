@@ -62,8 +62,16 @@ int main(void) {
       printf("- press 't <i> <j>' to put a tent at square (i,j)\n");
       printf("- press 'g <i> <j>' to put grass at square (i,j)\n");
       printf("- press 'e <i> <j>' to erase square (i,j)\n");
+      printf("- press 'z' to undo your move'\n");
+      printf("- press 'y' to redo your move'\n");
       printf("- press 'r' to restart\n");
       printf("- press 'q' to quit\n");
+    } else if (c == 'z') {
+      printf("> action: undo\n");
+      game_undo(g);
+    } else if (c == 'y') {
+      printf("> action: redo\n");
+      game_redo(g);
     } else if (c == 'r') {
       printf("> action: restart\n");
       game_restart(g);
