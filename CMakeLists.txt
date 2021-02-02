@@ -5,10 +5,10 @@ enable_testing()
 include(CTest)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -std=c99 -g --coverage")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -std=c99 -g")
 set(CMAKE_C_COMPILER gcc)
 
-add_library(game game.c game_aux.c)
+add_library(game game.c game_aux.c queue.c)
 
 add_executable(game_text game_text.c) 
 target_link_libraries(game_text game)
@@ -40,3 +40,19 @@ add_test(game_restart ./game_test game_restart)
 add_test(game_print ./game_test game_print)
 add_test(game_default ./game_test game_default)
 add_test(game_default_solution ./game_test game_default_solution)
+
+add_library(queue queue.c)
+add_executable(sample sample.c)
+target_link_libraries(sample queue game)
+add_executable(test_queue test_queue.c)
+target_link_libraries(test_queue queue)
+
+add_test(test_queue_new_free ./test_queue init_free)
+add_test(test_queue_push_head ./test_queue push_head)
+add_test(test_queue_pop_head ./test_queue pop_head)
+add_test(test_queue_push_tail ./test_queue push_tail)
+add_test(test_queue_pop_tail ./test_queue pop_tail)
+add_test(test_queue_length ./test_queue length)
+add_test(test_queue_empty ./test_queue empty)
+add_test(test_queue_clear ./test_queue clear)
+
