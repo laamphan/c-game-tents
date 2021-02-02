@@ -66,6 +66,14 @@ int main(void) {
       printf("- press 'y' to redo your move'\n");
       printf("- press 'r' to restart\n");
       printf("- press 'q' to quit\n");
+      // }
+      // //
+      // else if (c == 'a') {
+      //   game_fill_grass_row(g, 1);
+      // } else if (c == 'b') {
+      //   game_fill_grass_col(g, 1);
+      // }
+      // //
     } else if (c == 'z') {
       printf("> action: undo\n");
       game_undo(g);

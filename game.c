@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include "game_aux.h"
 #include "game_ext.h"
+#include "queue.h"
 
 struct game_s {
   square *squares;
@@ -14,7 +15,24 @@ struct game_s {
   uint nb_cols;
   bool wrapping;
   bool diagadj;
+  queue *undo;
+  queue *redo;
 };
+
+typedef enum {
+  FILLSQUARE = 0,  // fill one square move
+  FILLROW = 1,     // fill one row move
+  FILLCOL = 2,     // fill one column move
+} move_type;
+
+// struct history_move_s {
+//   move_type type;
+//   uint row_nb;
+//   uint col_nb;
+//   square *squares;
+// };
+
+// typedef struct history_move_s *hmove;
 
 //* Aux functions prototypes
 uint game_get_nb_adj(cgame g, uint i, uint j, square s);
@@ -31,8 +49,11 @@ game game_new(square *squares, uint *nb_tents_row, uint *nb_tents_col) {
   g->squares = malloc(nb_rows * nb_cols * sizeof(square));
   g->nb_tents_row = malloc(nb_rows * sizeof(uint));
   g->nb_tents_col = malloc(nb_cols * sizeof(uint));
+  g->undo = queue_new();
+  g->redo = queue_new();
   assert(g);
   assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  assert(g->undo && g->redo);
 
   g->nb_rows = nb_rows;
   g->nb_cols = nb_cols;
@@ -59,8 +80,11 @@ game game_new_empty(void) {
   g->squares = malloc(nb_rows * nb_cols * sizeof(square));
   g->nb_tents_row = malloc(nb_rows * sizeof(uint));
   g->nb_tents_col = malloc(nb_cols * sizeof(uint));
+  g->undo = queue_new();
+  g->redo = queue_new();
   assert(g);
   assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  assert(g->undo && g->redo);
 
   g->nb_rows = nb_rows;
   g->nb_cols = nb_cols;
@@ -86,8 +110,10 @@ game game_copy(cgame g) {
   game g_copy = game_new_empty();
   assert(g);
   assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  assert(g->undo && g->redo);
   assert(g_copy);
   assert(g_copy->squares && g_copy->nb_tents_row && g_copy->nb_tents_col);
+  assert(g_copy->undo && g_copy->redo);
 
   g_copy->nb_rows = g->nb_rows;
   g_copy->nb_cols = g->nb_cols;
@@ -112,8 +138,10 @@ bool game_equal(cgame g1, cgame g2) {
   uint nb_cols = g1->nb_cols;
   assert(g1);
   assert(g1->squares && g1->nb_tents_row && g1->nb_tents_col);
+  assert(g1->undo && g1->redo);
   assert(g2);
   assert(g2->squares && g2->nb_tents_row && g2->nb_tents_col);
+  assert(g2->undo && g2->redo);
 
   if (g1->nb_rows != g2->nb_rows || g1->nb_cols != g2->nb_cols ||
       g1->wrapping != g2->wrapping || g1->diagadj != g2->diagadj) {
@@ -140,9 +168,13 @@ bool game_equal(cgame g1, cgame g2) {
 
 void game_delete(game g) {
   assert(g);
+  assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  assert(g->undo && g->redo);
   free(g->squares);
   free(g->nb_tents_row);
   free(g->nb_tents_col);
+  queue_free_full(g->undo, free);
+  queue_free_full(g->redo, free);
   free(g);
 }
 
@@ -151,6 +183,7 @@ void game_set_square(game g, uint i, uint j, square s) {
   uint nb_cols = g->nb_cols;
   assert(g);
   assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  assert(g->undo && g->redo);
   assert(i >= 0 && i < nb_rows);
   assert(j >= 0 && j < nb_cols);
   assert(s >= 0 && s <= 3);
@@ -163,6 +196,7 @@ square game_get_square(cgame g, uint i, uint j) {
   uint nb_cols = g->nb_cols;
   assert(g);
   assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  assert(g->undo && g->redo);
   assert(i >= 0 && i < nb_rows);
   assert(j >= 0 && j < nb_cols);
 
@@ -173,6 +207,7 @@ void game_set_expected_nb_tents_row(game g, uint i, uint nb_tents) {
   uint nb_rows = g->nb_rows;
   assert(g);
   assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  assert(g->undo && g->redo);
   assert(i >= 0 && i < nb_rows);
 
   g->nb_tents_row[i] = nb_tents;
@@ -182,6 +217,7 @@ void game_set_expected_nb_tents_col(game g, uint j, uint nb_tents) {
   uint nb_cols = g->nb_cols;
   assert(g);
   assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  assert(g->undo && g->redo);
   assert(j >= 0 && j < nb_cols);
 
   g->nb_tents_col[j] = nb_tents;
@@ -191,6 +227,7 @@ uint game_get_expected_nb_tents_row(cgame g, uint i) {
   uint nb_rows = g->nb_rows;
   assert(g);
   assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  assert(g->undo && g->redo);
   assert(i >= 0 && i < nb_rows);
 
   return g->nb_tents_row[i];
@@ -200,6 +237,7 @@ uint game_get_expected_nb_tents_col(cgame g, uint j) {
   uint nb_cols = g->nb_cols;
   assert(g);
   assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  assert(g->undo && g->redo);
   assert(j >= 0 && j < nb_cols);
 
   return g->nb_tents_col[j];
@@ -210,6 +248,7 @@ uint game_get_expected_nb_tents_all(cgame g) {
   uint nb_cols = g->nb_cols;
   assert(g);
   assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  assert(g->undo && g->redo);
 
   uint count = 0;
 
@@ -227,6 +266,7 @@ uint game_get_current_nb_tents_row(cgame g, uint i) {
   uint nb_cols = g->nb_cols;
   assert(g);
   assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  assert(g->undo && g->redo);
   assert(i >= 0 && i < nb_rows);
 
   uint count = 0;
@@ -245,6 +285,7 @@ uint game_get_current_nb_tents_col(cgame g, uint j) {
   uint nb_cols = g->nb_cols;
   assert(g);
   assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  assert(g->undo && g->redo);
   assert(j >= 0 && j < nb_cols);
 
   uint count = 0;
@@ -263,6 +304,7 @@ uint game_get_current_nb_tents_all(cgame g) {
   uint nb_cols = g->nb_cols;
   assert(g);
   assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  assert(g->undo && g->redo);
 
   uint count = 0;
 
@@ -280,18 +322,35 @@ void game_play_move(game g, uint i, uint j, square s) {
   uint nb_cols = g->nb_cols;
   assert(g);
   assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  assert(g->undo && g->redo);
   assert(i >= 0 && i < nb_rows);
   assert(j >= 0 && j < nb_cols);
   assert(s >= 0 && s <= 3);
   assert(s != TREE);
   assert(game_get_square(g, i, j) != TREE);
 
+  if (!queue_is_empty(g->redo)) {
+    queue_clear_full(g->redo, free);
+  }
+
+  /* save a table of 3 containing:
+	move_tab[0] = move type (FILLSQUARE/FILLROW/FILLCOL)
+	*/
+  uint *move_tab = malloc(4 * sizeof(uint));
+  assert(move_tab);
+  move_tab[0] = FILLSQUARE;
+  move_tab[1] = i;
+  move_tab[2] = j;
+  move_tab[3] = game_get_square(g, i, j);
+  queue_push_head(g->undo, move_tab);
+
   g->squares[i * nb_cols + j] = s;
 }
-//!
+
 int game_check_move(cgame g, uint i, uint j, square s) {
   assert(g);
   assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  assert(g->undo && g->redo);
   uint nb_rows = g->nb_rows;
   uint nb_cols = g->nb_cols;
   assert(i >= 0 && i < nb_rows);
@@ -604,6 +663,7 @@ bool game_is_over(cgame g) {
   uint nb_cols = g->nb_cols;
   assert(g);
   assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  assert(g->undo && g->redo);
 
   bool diagadj = g->diagadj;
 
@@ -652,7 +712,17 @@ void game_fill_grass_row(game g, uint i) {
   uint nb_cols = g->nb_cols;
   assert(g);
   assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  assert(g->undo && g->redo);
   assert(i >= 0 && i < nb_rows);
+
+  uint *move_tab = malloc((2 + nb_cols) * sizeof(uint));
+  assert(move_tab);
+  move_tab[0] = FILLROW;
+  move_tab[1] = i;
+  for (uint j = 0; j < nb_cols; j++) {
+    move_tab[2 + j] = game_get_square(g, i, j);
+  }
+  queue_push_head(g->undo, move_tab);
 
   for (uint j = 0; j < nb_cols; j++) {
     if (game_get_square(g, i, j) == EMPTY) {
@@ -666,7 +736,17 @@ void game_fill_grass_col(game g, uint j) {
   uint nb_cols = g->nb_cols;
   assert(g);
   assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  assert(g->undo && g->redo);
   assert(j >= 0 && j < nb_cols);
+
+  uint *move_tab = malloc((2 + nb_rows) * sizeof(uint));
+  assert(move_tab);
+  move_tab[0] = FILLCOL;
+  move_tab[1] = j;
+  for (uint i = 0; i < nb_rows; i++) {
+    move_tab[2 + i] = game_get_square(g, i, j);
+  }
+  queue_push_head(g->undo, move_tab);
 
   for (uint i = 0; i < nb_rows; i++) {
     if (game_get_square(g, i, j) == EMPTY) {
@@ -680,11 +760,18 @@ void game_restart(game g) {
   uint nb_cols = g->nb_cols;
   assert(g);
   assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  assert(g->undo && g->redo);
 
   for (uint k = 0; k < nb_rows * nb_cols; k++) {
     if (g->squares[k] != TREE) {
       g->squares[k] = EMPTY;
     }
+  }
+  if (!queue_is_empty(g->undo)) {
+    queue_clear_full(g->undo, free);
+  }
+  if (!queue_is_empty(g->redo)) {
+    queue_clear_full(g->redo, free);
   }
 }
 
@@ -696,8 +783,11 @@ game game_new_ext(uint nb_rows, uint nb_cols, square *squares, uint *nb_tents_ro
   g->squares = malloc(nb_rows * nb_cols * sizeof(square));
   g->nb_tents_row = malloc(nb_rows * sizeof(uint));
   g->nb_tents_col = malloc(nb_cols * sizeof(uint));
+  g->undo = queue_new();
+  g->redo = queue_new();
   assert(g);
   assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  assert(g->undo && g->redo);
 
   g->nb_rows = nb_rows;
   g->nb_cols = nb_cols;
@@ -722,8 +812,11 @@ game game_new_empty_ext(uint nb_rows, uint nb_cols, bool wrapping, bool diagadj)
   g->squares = malloc(nb_rows * nb_cols * sizeof(square));
   g->nb_tents_row = malloc(nb_rows * sizeof(uint));
   g->nb_tents_col = malloc(nb_cols * sizeof(uint));
+  g->undo = queue_new();
+  g->redo = queue_new();
   assert(g);
   assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  assert(g->undo && g->redo);
 
   g->nb_rows = nb_rows;
   g->nb_cols = nb_cols;
@@ -746,30 +839,120 @@ game game_new_empty_ext(uint nb_rows, uint nb_cols, bool wrapping, bool diagadj)
 uint game_nb_rows(cgame g) {
   assert(g);
   assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  assert(g->undo && g->redo);
   return g->nb_rows;
 }
 
 uint game_nb_cols(cgame g) {
   assert(g);
   assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  assert(g->undo && g->redo);
   return g->nb_cols;
 }
 
 bool game_is_wrapping(cgame g) {
   assert(g);
   assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  assert(g->undo && g->redo);
   return g->wrapping;
 }
 
 bool game_is_diagadj(cgame g) {
   assert(g);
   assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  assert(g->undo && g->redo);
   return g->diagadj;
 }
 //!
-void game_undo(game g) {}
+void game_undo(game g) {
+  uint nb_rows = g->nb_rows;
+  uint nb_cols = g->nb_cols;
+  assert(g);
+  assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  assert(g->undo && g->redo);
+
+  if (queue_is_empty(g->undo)) {
+    return;
+  }
+
+  uint *move_undo = queue_peek_head(g->undo);
+  if (move_undo[0] == FILLSQUARE) {
+    uint i = move_undo[1];
+    uint j = move_undo[2];
+    uint s = move_undo[3];
+    square square_save = game_get_square(g, i, j);
+    game_set_square(g, i, j, s);
+    move_undo[3] = square_save;
+  }
+  //
+  else if (move_undo[0] == FILLROW) {
+    uint i = move_undo[1];
+    uint row_save[nb_cols];
+    for (uint j = 0; j < nb_cols; j++) {
+      row_save[j] = game_get_square(g, i, j);
+      game_set_square(g, i, j, move_undo[2 + j]);
+      move_undo[2 + j] = row_save[j];
+    }
+  }
+  //
+  else if (move_undo[0] == FILLCOL) {
+    uint j = move_undo[1];
+    uint col_save[nb_rows];
+    for (uint i = 0; i < nb_rows; i++) {
+      col_save[i] = game_get_square(g, i, j);
+      game_set_square(g, i, j, move_undo[2 + i]);
+      move_undo[2 + i] = col_save[i];
+    }
+  }
+
+  queue_push_head(g->redo, move_undo);
+  queue_pop_head(g->undo);
+}
 //!
-void game_redo(game g) {}
+void game_redo(game g) {
+  uint nb_rows = g->nb_rows;
+  uint nb_cols = g->nb_cols;
+  assert(g);
+  assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  assert(g->undo && g->redo);
+
+  if (queue_is_empty(g->redo)) {
+    return;
+  }
+
+  uint *move_redo = queue_peek_head(g->redo);
+  if (move_redo[0] == FILLSQUARE) {
+    uint i = move_redo[1];
+    uint j = move_redo[2];
+    uint s = move_redo[3];
+    square square_save = game_get_square(g, i, j);
+    game_set_square(g, i, j, s);
+    move_redo[3] = square_save;
+  }
+  //
+  else if (move_redo[0] == FILLROW) {
+    uint i = move_redo[1];
+    uint row_save[nb_cols];
+    for (uint j = 0; j < nb_cols; j++) {
+      row_save[j] = game_get_square(g, i, j);
+      game_set_square(g, i, j, move_redo[2 + j]);
+      move_redo[2 + j] = row_save[j];
+    }
+  }
+  //
+  else if (move_redo[0] == FILLCOL) {
+    uint j = move_redo[1];
+    uint col_save[nb_rows];
+    for (uint i = 0; i < nb_rows; i++) {
+      col_save[i] = game_get_square(g, i, j);
+      game_set_square(g, i, j, move_redo[2 + i]);
+      move_redo[2 + i] = col_save[i];
+    }
+  }
+
+  queue_push_head(g->undo, move_redo);
+  queue_pop_head(g->redo);
+}
 
 //* Aux functions
 
@@ -778,6 +961,7 @@ uint game_get_nb_adj(cgame g, uint i, uint j, square s) {
   uint nb_cols = g->nb_cols;
   assert(g);
   assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  assert(g->undo && g->redo);
   assert(i >= 0 && i < nb_rows);
   assert(j >= 0 && j < nb_cols);
   assert(s >= 0 && s <= 3);
@@ -885,6 +1069,7 @@ uint game_get_nb_tents_diag_adj(cgame g, uint i, uint j) {
   uint nb_cols = g->nb_cols;
   assert(g);
   assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  assert(g->undo && g->redo);
   assert(i >= 0 && i < nb_rows);
   assert(j >= 0 && j < nb_cols);
 
@@ -1022,6 +1207,7 @@ uint game_get_current_nb_emptys_row(cgame g, uint i) {
   uint nb_cols = g->nb_cols;
   assert(g);
   assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  assert(g->undo && g->redo);
   assert(i >= 0 && i < nb_rows);
 
   uint count = 0;
@@ -1040,6 +1226,7 @@ uint game_get_current_nb_emptys_col(cgame g, uint j) {
   uint nb_cols = g->nb_cols;
   assert(g);
   assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  assert(g->undo && g->redo);
   assert(j >= 0 && j < nb_cols);
 
   uint count = 0;
@@ -1058,6 +1245,7 @@ uint game_get_current_nb_emptys_all(cgame g) {
   uint nb_cols = g->nb_cols;
   assert(g);
   assert(g->squares && g->nb_tents_row && g->nb_tents_col);
+  assert(g->undo && g->redo);
 
   uint count = 0;
 
