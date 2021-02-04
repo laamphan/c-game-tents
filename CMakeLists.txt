@@ -5,8 +5,13 @@ enable_testing()
 include(CTest)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -std=c99 -g")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -std=c99 -g --coverage")
 set(CMAKE_C_COMPILER gcc)
+
+set (
+  CTEST_CUSTOM_COVERAGE_EXCLUDE
+	"game_text.c"
+)
 
 add_library(game game.c game_aux.c queue.c)
 
@@ -31,9 +36,16 @@ add_test(game_get_current_nb_tents_row ./game_test game_get_current_nb_tents_row
 add_test(game_get_current_nb_tents_col ./game_test game_get_current_nb_tents_col)
 add_test(game_get_current_nb_tents_all ./game_test game_get_current_nb_tents_all)
 add_test(game_play_move ./game_test game_play_move)
+add_test(game_check_move ./game_test game_check_move)
 add_test(game_check_move_1 ./game_test game_check_move_1)
 add_test(game_check_move_2 ./game_test game_check_move_2)
+add_test(game_check_move_3 ./game_test game_check_move_3)
+add_test(game_check_move_4 ./game_test game_check_move_4)
 add_test(game_is_over ./game_test game_is_over)
+add_test(game_is_over_1 ./game_test game_is_over_1)
+add_test(game_is_over_2 ./game_test game_is_over_2)
+add_test(game_is_over_3 ./game_test game_is_over_3)
+add_test(game_is_over_4 ./game_test game_is_over_4)
 add_test(game_fill_grass_row ./game_test game_fill_grass_row)
 add_test(game_fill_grass_col ./game_test game_fill_grass_col)
 add_test(game_restart ./game_test game_restart)
@@ -41,9 +53,19 @@ add_test(game_print ./game_test game_print)
 add_test(game_default ./game_test game_default)
 add_test(game_default_solution ./game_test game_default_solution)
 
+add_test(game_new_ext ./game_test game_new_ext)
+add_test(game_new_empty_ext ./game_test game_new_empty_ext)
+add_test(game_nb_rows ./game_test game_nb_rows)
+add_test(game_nb_cols ./game_test game_nb_cols)
+add_test(game_is_wrapping ./game_test game_is_wrapping)
+add_test(game_is_diagadj ./game_test game_is_diagadj)
+add_test(game_undo ./game_test game_undo)
+add_test(game_redo ./game_test game_redo)
+
+add_test(game_extra ./game_test game_extra)
+
+
 add_library(queue queue.c)
-add_executable(sample sample.c)
-target_link_libraries(sample queue game)
 add_executable(test_queue test_queue.c)
 target_link_libraries(test_queue queue)
 
