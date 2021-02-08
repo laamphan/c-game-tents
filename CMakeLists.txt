@@ -13,7 +13,7 @@ set (
 	"game_text.c"
 )
 
-add_library(game game.c game_aux.c game_ext.c game_private.c queue.c)
+add_library(game game.c game_aux.c game_ext.c game_tools.c game_private.c queue.c)
 
 add_executable(game_text game_text.c) 
 target_link_libraries(game_text game)
