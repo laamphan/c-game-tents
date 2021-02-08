@@ -9,10 +9,8 @@
 /* ********** ASSERT ********** */
 
 #define ASSERT(expr)                                                                  \
-  do                                                                                  \
-  {                                                                                   \
-    if ((expr) == 0)                                                                  \
-    {                                                                                 \
+  do {                                                                                \
+    if ((expr) == 0) {                                                                \
       fprintf(stderr, "[%s:%d] Assertion '%s' failed!\n", __FILE__, __LINE__, #expr); \
       abort();                                                                        \
     }                                                                                 \
@@ -20,8 +18,7 @@
 
 /* ********** TEST INIT & FREE ********** */
 
-bool test_new_free(void)
-{
+bool test_new_free(void) {
   queue *q = queue_new();
   ASSERT(q);
   queue_free(q);
@@ -30,13 +27,11 @@ bool test_new_free(void)
 
 /* ********** TEST PUSH HEAD ********** */
 
-bool test_push_head(int k)
-{
+bool test_push_head(int k) {
   queue *q = queue_new();
   ASSERT(q);
 
-  for (int i = 0; i < k; i++)
-  {
+  for (int i = 0; i < k; i++) {
     int *data = (int *)malloc(sizeof(int));
     ASSERT(data);
     *data = i;
@@ -53,13 +48,11 @@ bool test_push_head(int k)
 
 /* ********** TEST PUSH TAIL ********** */
 
-bool test_push_tail(int k)
-{
+bool test_push_tail(int k) {
   queue *q = queue_new();
   ASSERT(q);
 
-  for (int i = 0; i < k; i++)
-  {
+  for (int i = 0; i < k; i++) {
     int *data = (int *)malloc(sizeof(int));
     ASSERT(data);
     *data = i;
@@ -76,20 +69,17 @@ bool test_push_tail(int k)
 
 /* ********** TEST POP HEAD ********** */
 
-bool test_pop_head(int k)
-{
+bool test_pop_head(int k) {
   queue *q = queue_new();
   ASSERT(q);
-  for (int i = 0; i < k; i++)
-  {
+  for (int i = 0; i < k; i++) {
     int *data = (int *)malloc(sizeof(int));
     ASSERT(data);
     *data = i;
     queue_push_tail(q, data);
   }
 
-  for (int i = 0; i < k; i++)
-  {
+  for (int i = 0; i < k; i++) {
     int *data = queue_pop_head(q);
     ASSERT(*data == i);
     free(data);
@@ -100,20 +90,17 @@ bool test_pop_head(int k)
 
 /* ********** TEST POP TAIL ********** */
 
-bool test_pop_tail(int k)
-{
+bool test_pop_tail(int k) {
   queue *q = queue_new();
   ASSERT(q);
-  for (int i = 0; i < k; i++)
-  {
+  for (int i = 0; i < k; i++) {
     int *data = (int *)malloc(sizeof(int));
     ASSERT(data);
     *data = i;
     queue_push_head(q, data);
   }
 
-  for (int i = 0; i < k; i++)
-  {
+  for (int i = 0; i < k; i++) {
     int *data = queue_pop_tail(q);
     ASSERT(*data == i);
     free(data);
@@ -124,12 +111,10 @@ bool test_pop_tail(int k)
 
 /* ********** TEST CLEAR ********** */
 
-bool test_clear(int k)
-{
+bool test_clear(int k) {
   queue *q = queue_new();
   ASSERT(q);
-  for (int i = 0; i < k; i++)
-  {
+  for (int i = 0; i < k; i++) {
     int *data = (int *)malloc(sizeof(int));
     ASSERT(data);
     *data = i;
@@ -145,13 +130,11 @@ bool test_clear(int k)
 
 /* ********** TEST EMPTY ********** */
 
-bool test_empty(int k)
-{
+bool test_empty(int k) {
   queue *q = queue_new();
   ASSERT(q);
   ASSERT(queue_is_empty(q));
-  for (int i = 0; i < k; i++)
-  {
+  for (int i = 0; i < k; i++) {
     int *data = (int *)malloc(sizeof(int));
     ASSERT(data);
     *data = i;
@@ -166,13 +149,11 @@ bool test_empty(int k)
 
 /* ********** TEST LENGTH ********** */
 
-bool test_length(int k)
-{
+bool test_length(int k) {
   queue *q = queue_new();
   ASSERT(q);
   ASSERT(queue_length(q) == 0);
-  for (int i = 0; i < k; i++)
-  {
+  for (int i = 0; i < k; i++) {
     int *data = (int *)malloc(sizeof(int));
     ASSERT(data);
     *data = i;
@@ -195,16 +176,14 @@ bool test_length(int k)
 
 /* ********** USAGE ********** */
 
-void usage(int argc, char *argv[])
-{
+void usage(int argc, char *argv[]) {
   fprintf(stderr, "Usage: %s <testname> [<...>]\n", argv[0]);
   exit(EXIT_FAILURE);
 }
 
 /* ********** MAIN ROUTINE ********** */
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
   if (argc == 1)
     usage(argc, argv);
 
@@ -227,20 +206,16 @@ int main(int argc, char *argv[])
     ok = test_empty(10);
   else if (strcmp("clear", argv[1]) == 0)
     ok = test_clear(10);
-  else
-  {
+  else {
     fprintf(stderr, "Error: test \"%s\" not found!\n", argv[1]);
     exit(EXIT_FAILURE);
   }
 
   // print test result
-  if (ok)
-  {
+  if (ok) {
     fprintf(stderr, "Test \"%s\" finished: SUCCESS\n", argv[1]);
     return EXIT_SUCCESS;
-  }
-  else
-  {
+  } else {
     fprintf(stderr, "Test \"%s\" finished: FAILURE\n", argv[1]);
     return EXIT_FAILURE;
   }
