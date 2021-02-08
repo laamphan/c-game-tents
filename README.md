@@ -85,7 +85,7 @@ About Const Pointer:
 
 There are many different ways to deal with program errors... Concerning the "game" library, we suppose that function calls to these interfaces ([**_game.h_**](https://pt2.gitlabpages.inria.fr/tents/v2/game_8h.html), ...) must systematically be made with valid arguments (see preconditions). Also, the behavior of the library is not defined if a third-party program passes bad arguments to it. In practice, this means that the responsibility of checking that the arguments are valid is relieved to the high-level program (_game_text_, ...).
 
-In order to debug your program easily, we recommand to use the `assert()` macro, as it allows you to activate checks only in DEBUG mode and not in RELEASE mode. More precisely, if you pass the `-DNDEBUG` option at compilation time, the macro `assert()` generates no code, and hence does nothing at all.
+In order to debug your program easily, we recommend to use the `assert()` macro, as it allows you to activate checks only in DEBUG mode and not in RELEASE mode. More precisely, if you pass the `-DNDEBUG` option at compilation time, the macro `assert()` generates no code, and hence does nothing at all.
 
 For example:
 
@@ -124,7 +124,7 @@ The variant of the Rule 4) we have chosen is a local criterion, that is much eas
 
 ## Game Extension
 
-Here, we will consider a generalisation of the original game (or _version 1_). This new version (called _version 2_) is characterized by the following changes:
+Here, we will consider a generalization of the original game (or _version 1_). This new version (called _version 2_) is characterized by the following changes:
 
 - The grid can have an arbitrary number of rows and columns. The default game dimensions were a square grid of size 8x8.
 - The game grid has the possibility to have a "toric" **topology** (`wrapping` option): the rightmost column is adjacent to the leftmost column and the highest row is adjacent to the lowest row.
@@ -132,3 +132,27 @@ Here, we will consider a generalisation of the original game (or _version 1_). T
 - We introduce in this version an history management of game moves ([game_play_move()](https://pt2.gitlabpages.inria.fr/tents/v2/game_8h.html#aae589406b760218d076fd02dcb42ccb9 "Plays a move in a given square. ")), in order to be able to _undo_ the last moves played ([game_undo()](https://pt2.gitlabpages.inria.fr/tents/v2/game__ext_8h.html#a645c3423245a31af908fcd3434254204 "Undoes the last move. ")), or to replay the last undone moves if necessary ([game_redo()](https://pt2.gitlabpages.inria.fr/tents/v2/game__ext_8h.html#a2f80dbffdb3d7b16e05526a29a143f14 "Redoes the last move. ")). After playing a new move with [game_play_move()](https://pt2.gitlabpages.inria.fr/tents/v2/game_8h.html#aae589406b760218d076fd02dcb42ccb9 "Plays a move in a given square. "), it is no longer possible to redo an old cancelled move. The function [game_restart()](https://pt2.gitlabpages.inria.fr/tents/v2/game_8h.html#a403c5ff67201946c3f7043d62d2abb7f "Restarts a game. ") clears the history. To simplify, it is considered that the functions [game_fill_grass_row()](https://pt2.gitlabpages.inria.fr/tents/v2/game_8h.html#a8955f771325896e0aef7d48f7029f56a "Fills a row with grass. ") and [game_fill_grass_col()](https://pt2.gitlabpages.inria.fr/tents/v2/game_8h.html#a89fea612b8fd176363ce083213fde5ed "Fills a column with grass. ") will save a set of moves in the history, which will therefore have to be cancelled in several times. The other functions are not involved in the history management.
 
 The file [game_ext.h](https://pt2.gitlabpages.inria.fr/tents/v2/game__ext_8h.html) contains the description of these new features. Note that version 2 of the game keeps the compatibility with version 1\.
+
+## Game IO
+
+We now add Input/Output features to our library libgame.
+
+For this purpose, we will implement 2 functions [game_load()](game__tools_8h.html#a8737a5878e15868dc35349fca499e640 "Creates a game by loading its description in a text file. ") and [game_save()](game__tools_8h.html#a8eaf898f66ea7d7530b981cb77245e45 "Saves a game in a text file. ") allowing respectively to load and save a game (possibly in progress, and thus possibly the solution of a game). These functions must be implemented in the files [game_tools.h](game__tools_8h.html "Game Tools. ") and game_tools.c.
+
+The format used to save a game is the following:
+
+```
+<nb_rows> <nb_cols> <is_swap> <is_diagadj>\n
+<nb_tents_row[0]> <nb_tents_row[1]> ... <nb_tents_row[nb_rows-1]> \n
+<nb_tents_col[0]> <nb_tents_col[1]> ... <nb_tents_col[nb_cols-1]> \n
+<squares[0][0]><squares[0][1]>...<squares[0][nb_cols-1]>\n
+<squares[1][0]><squares[1][1]>...<squares[1][nb_cols-1]>\n
+...
+<squares[nb_rows-1][0]><squares[nb_rows-1][1]>...<squares[nb_rows-1][nb_cols-1]>\n
+```
+
+The first line describes in that order the number of grid rows `<nb_rows>`, the number of grid columns `<nb_cols>`, is the topology wrapping or not `<is_wrapping>` (0 for false and 1 for true) and do diagonals count for adjacency `<is_diagadj>` (0 for false and 1 for true). Then, the second line indicates for each line, the number of expected tents (the values are separated by spaces and there is a space at the end of the line). The third line, indicates for each column the number of expected tents (the values are separated by spaces and there is a space at the end of the line). Finally the following lines store the content of each square of the grid with one character (' ' for EMPTY, 'x' for TREE, '*' for TENT, '-' for GRASS). In particular, `<squares[i][j]>` describes the content of the square in the i-th row and j-th column.
+
+**Nota Bene** : The characters return to the line `\n` are indicated for clarify the file format... Note that the (numeric) values in the first 3 lines are separated by spaces but that the values (as character) in the grid are not separated by spaces.
+
+The file [game_tools.h](game__tools_8h.html) contains the description of these input-output features.
