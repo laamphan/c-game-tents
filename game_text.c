@@ -81,6 +81,10 @@ int main(void) {
       printf("> action: quit\n");
       printf("What a shame, you gave up :-(\n");
       return EXIT_SUCCESS;
+    } else if (c == 's') {
+      game_save(g, "./current.tnt");
+    } else if (c == 'l') {
+      g = game_load("../saves/game_default.tnt");
     } else if (c == 't') {
       scanf(" %u %u", &i, &j);
       printf("> action: play move 't' into square %u %u\n", i, j);
