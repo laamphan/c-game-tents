@@ -8,10 +8,7 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -std=c99 -g --coverage")
 set(CMAKE_C_COMPILER gcc)
 
-set (
-  CTEST_CUSTOM_COVERAGE_EXCLUDE
-	"game_text.c"
-)
+set (CTEST_CUSTOM_COVERAGE_EXCLUDE "game_text.c")
 
 add_library(game game.c game_aux.c game_ext.c game_tools.c game_private.c queue.c)
 
@@ -61,6 +58,9 @@ add_test(game_is_wrapping ./game_test game_is_wrapping)
 add_test(game_is_diagadj ./game_test game_is_diagadj)
 add_test(game_undo ./game_test game_undo)
 add_test(game_redo ./game_test game_redo)
+
+add_test(game_load ./game_test game_load)
+add_test(game_save ./game_test game_save)
 
 add_test(game_extra ./game_test game_extra)
 
