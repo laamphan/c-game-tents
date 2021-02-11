@@ -4,6 +4,8 @@ project(c-game-tents)
 enable_testing()
 include(CTest)
 
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/data/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/data/)
+
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -std=c99 -g --coverage")
 set(CMAKE_C_COMPILER gcc)
