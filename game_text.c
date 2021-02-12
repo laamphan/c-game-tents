@@ -25,14 +25,34 @@ int main(int argc, char *argv[]) {
       printf("- press 'e <i> <j>' to erase square (i,j)\n");
       printf("- press 'z' to undo your move'\n");
       printf("- press 'y' to redo your move'\n");
+      printf("- press 's' to save current state\n");
       printf("- press 'r' to restart\n");
       printf("- press 'q' to quit\n");
+    } else if (c == 't' || c == 'g' || c == 'e') {
+      scanf(" %d %d", &i, &j);
+      printf("> action: play move '%c' into square %d %d\n", c, i, j);
+      square s;
+      if (c == 't') s = TENT;
+      if (c == 'g') s = GRASS;
+      if (c == 'e') s = EMPTY;
+      if ((i >= game_nb_rows(g)) || (j >= game_nb_cols(g)) || i < 0 || j < 0 ||
+          (game_check_move(g, i, j, s) == ILLEGAL)) {
+        printf("Illegal / Wrong parameters\n");
+      } else if (game_check_move(g, i, j, s) == LOSING) {
+        printf("Warning: losing move in square (%d, %d)\n", i, j);
+        game_play_move(g, i, j, s);
+      } else {
+        game_play_move(g, i, j, s);
+      }
     } else if (c == 'z') {
       printf("> action: undo\n");
       game_undo(g);
     } else if (c == 'y') {
       printf("> action: redo\n");
       game_redo(g);
+    } else if (c == 's') {
+      printf("> action: save\n");
+      game_save(g, "./data/current.tnt");
     } else if (c == 'r') {
       printf("> action: restart\n");
       game_restart(g);
@@ -41,44 +61,6 @@ int main(int argc, char *argv[]) {
       printf("What a shame, you gave up :-(\n");
       game_delete(g);
       return EXIT_SUCCESS;
-    } else if (c == 's') {
-      game_save(g, "./data/current.tnt");
-    } else if (c == 't') {
-      scanf(" %d %d", &i, &j);
-      printf("> action: play move 't' into square %d %d\n", i, j);
-      if ((i >= game_nb_rows(g)) || (j >= game_nb_cols(g)) || i < 0 || j < 0 ||
-          (game_check_move(g, i, j, TENT) == ILLEGAL)) {
-        printf("Illegal / Wrong parameters\n");
-      } else if (game_check_move(g, i, j, TENT) == LOSING) {
-        printf("Warning: losing move in square (%d, %d)\n", i, j);
-        game_play_move(g, i, j, TENT);
-      } else {
-        game_play_move(g, i, j, TENT);
-      }
-    } else if (c == 'g') {
-      scanf(" %d %d", &i, &j);
-      printf("> action: play move 'g' into square %d %d\n", i, j);
-      if ((i >= game_nb_rows(g)) || (j >= game_nb_cols(g)) || i < 0 || j < 0 ||
-          (game_check_move(g, i, j, GRASS) == ILLEGAL)) {
-        printf("Illegal / Wrong parameters\n");
-      } else if (game_check_move(g, i, j, GRASS) == LOSING) {
-        printf("Warning: losing move in square (%d, %d)\n", i, j);
-        game_play_move(g, i, j, GRASS);
-      } else {
-        game_play_move(g, i, j, GRASS);
-      }
-    } else if (c == 'e') {
-      scanf(" %d %d", &i, &j);
-      printf("> action: play move 'e' into square %d %d\n", i, j);
-      if ((i >= game_nb_rows(g)) || (j >= game_nb_cols(g)) || i < 0 || j < 0 ||
-          (game_check_move(g, i, j, EMPTY) == ILLEGAL)) {
-        printf("Illegal / Wrong parameters\n");
-      } else if (game_check_move(g, i, j, EMPTY) == LOSING) {
-        printf("Warning: losing move in square (%d, %d)\n", i, j);
-        game_play_move(g, i, j, EMPTY);
-      } else {
-        game_play_move(g, i, j, EMPTY);
-      }
     }
   }
   game_print(g);

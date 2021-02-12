@@ -28,12 +28,9 @@ game game_load(char *filename) {
         squares[i * nb_cols + j] = TREE;
       else if (type[j] == '*')
         squares[i * nb_cols + j] = TENT;
-      else
-        exit(EXIT_FAILURE);
     }
   }
-  game g = game_new_ext(nb_rows, nb_cols, squares, nb_tents_row, nb_tents_col,
-                        wrapping, diagadj);
+  game g = game_new_ext(nb_rows, nb_cols, squares, nb_tents_row, nb_tents_col, wrapping, diagadj);
   fclose(f);
   return g;
 }
