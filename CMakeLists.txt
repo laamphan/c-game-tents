@@ -1,16 +1,18 @@
-cmake_minimum_required(VERSION 2.6)
-project(c-game-tents)
+cmake_minimum_required(VERSION 3.0)
+project("c-game-tents" C)
 
-enable_testing()
 include(CTest)
+enable_testing()
+
+# set(CMAKE_VERBOSE_MAKEFILE ON)
+
+set(CMAKE_C_FLAGS "-Wall -std=c99")							# options de compilation génériques
+set(CMAKE_C_FLAGS_DEBUG " -O0 --coverage")  		# options de compilation en mode Debug
+set(CMAKE_C_FLAGS_RELEASE "-O3")								# options de compilation en mode Release
+
+set (CTEST_CUSTOM_COVERAGE_EXCLUDE "game_text.c" "queue.c")
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/data/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/data/)
-
-set(CMAKE_VERBOSE_MAKEFILE ON)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -std=c99 -g --coverage")
-set(CMAKE_C_COMPILER gcc)
-
-set (CTEST_CUSTOM_COVERAGE_EXCLUDE "game_text.c")
 
 add_library(game game.c game_aux.c game_ext.c game_tools.c game_private.c queue.c)
 
