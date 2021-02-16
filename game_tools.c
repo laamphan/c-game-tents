@@ -30,7 +30,8 @@ game game_load(char *filename) {
         squares[i * nb_cols + j] = TENT;
     }
   }
-  game g = game_new_ext(nb_rows, nb_cols, squares, nb_tents_row, nb_tents_col, wrapping, diagadj);
+  game g = game_new_ext(nb_rows, nb_cols, squares, nb_tents_row, nb_tents_col,
+                        wrapping, diagadj);
   fclose(f);
   return g;
 }
@@ -67,3 +68,7 @@ void game_save(cgame g, char *filename) {
   }
   fclose(f);
 }
+
+bool game_solve(game g) { return false; }
+
+uint game_nb_solutions(game g) { return 0; }
